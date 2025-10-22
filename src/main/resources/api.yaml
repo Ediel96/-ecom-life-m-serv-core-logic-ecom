@@ -1,0 +1,784 @@
+# OpenAPI spec for Ecom & Life Management System
+openapi: 3.0.3
+info:
+  title: Ecom & Life Management System API
+  version: 1.0.0
+  description: >
+    REST API that reflects the database schema. Endpoints include brief descriptions
+    to clarify their intention and typical use.
+
+servers:
+  - url: /api
+
+tags:
+  - name: Users
+    description: User accounts for the system.
+  - name: Categories
+    description: Transaction categories classification.
+  - name: Accounts
+    description: Financial accounts (bank, cash, credit cards).
+  - name: Transactions
+    description: Financial transactions for users and accounts.
+  - name: Future Plans
+    description: User financial goals and plans.
+  - name: Plan Movements
+    description: Money movements recorded for a plan.
+
+paths:
+  # List users for admin panels or user selectors; create new users.
+  /users:
+    get:
+      tags: [Users]
+      summary: List users
+      description: Retrieve a paginated list of users.
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - in: query
+          name: email
+          schema: { type: string }
+          description: Filter by exact email.
+        - in: query
+          name: username
+          schema: { type: string }
+          description: Filter by exact username.
+      responses:
+        '200':
+          description: List of users.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageUser'
+    post:
+      tags: [Users]
+      summary: Create user
+      description: Register a new user account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreate' }
+      responses:
+        '201':
+          description: User created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  # Operate on a specific user; used to fetch profile, update details, or delete.
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user
+      description: Get a user by id.
+      parameters:
+        - $ref: '#/components/parameters/uuidId'
+      responses:
+        '200':
+          description: User found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Users]
+      summary: Update user
+      description: Update user fields (server may ignore immutable fields).
+      parameters:
+        - $ref: '#/components/parameters/uuidId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdate' }
+      responses:
+        '200':
+          description: Updated user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Users]
+      summary: Delete user
+      description: Remove a user and cascade where applicable.
+      parameters:
+        - $ref: '#/components/parameters/uuidId'
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # Manage categories; used to classify transactions and speed up analytics.
+  /categories:
+    get:
+      tags: [Categories]
+      summary: List categories
+      description: Retrieve categories, optionally filtered by transaction type.
+      parameters:
+        - in: query
+          name: transaction_type
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+          description: Filter by transaction type.
+      responses:
+        '200':
+          description: List of categories.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Category' }
+    post:
+      tags: [Categories]
+      summary: Create category
+      description: Add a new category for expenses or income.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryCreate' }
+      responses:
+        '201':
+          description: Category created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /categories/{id}:
+    get:
+      tags: [Categories]
+      summary: Get category
+      description: Get a category by id.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '200':
+          description: Category found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Categories]
+      summary: Update category
+      description: Update a category fields.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryUpdate' }
+      responses:
+        '200':
+          description: Updated category.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Categories]
+      summary: Delete category
+      description: Remove a category. Transactions may retain it as `NULL` if on delete set null.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # Manage financial accounts; generally tied to a specific user.
+  /accounts:
+    get:
+      tags: [Accounts]
+      summary: List accounts
+      description: Retrieve accounts, optionally filtered by `user_id`.
+      parameters:
+        - in: query
+          name: user_id
+          schema: { type: string, format: uuid }
+          description: Filter accounts for a user.
+      responses:
+        '200':
+          description: List of accounts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Account' }
+    post:
+      tags: [Accounts]
+      summary: Create account
+      description: Create a financial account (bank, cash, card).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccountCreate' }
+      responses:
+        '201':
+          description: Account created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /accounts/{id}:
+    get:
+      tags: [Accounts]
+      summary: Get account
+      description: Get an account by id.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '200':
+          description: Account found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Accounts]
+      summary: Update account
+      description: Update account metadata or balance.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccountUpdate' }
+      responses:
+        '200':
+          description: Updated account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Accounts]
+      summary: Delete account
+      description: Remove an account and its transactions if cascaded.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # Record and query transactions; supports filters for analytics and reporting.
+  /transactions:
+    get:
+      tags: [Transactions]
+      summary: List transactions
+      description: Retrieve transactions with rich filters for reporting.
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/sort'
+        - in: query
+          name: user_id
+          schema: { type: string, format: uuid }
+          description: Filter by user id.
+        - in: query
+          name: account_id
+          schema: { type: integer }
+          description: Filter by account id.
+        - in: query
+          name: category_id
+          schema: { type: integer }
+          description: Filter by category id.
+        - in: query
+          name: transaction_type
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+          description: Filter by income or expense.
+        - in: query
+          name: date_from
+          schema: { type: string, format: date-time }
+          description: Inclusive start date-time.
+        - in: query
+          name: date_to
+          schema: { type: string, format: date-time }
+          description: Inclusive end date-time.
+      responses:
+        '200':
+          description: List of transactions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTransaction'
+    post:
+      tags: [Transactions]
+      summary: Create transaction
+      description: Record a new transaction for an account or user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransactionCreate' }
+      responses:
+        '201':
+          description: Transaction created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /transactions/{id}:
+    get:
+      tags: [Transactions]
+      summary: Get transaction
+      description: Get a transaction by id.
+      parameters:
+        - $ref: '#/components/parameters/longId'
+      responses:
+        '200':
+          description: Transaction found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Transactions]
+      summary: Update transaction
+      description: Update a transaction (e.g., fix amount or category).
+      parameters:
+        - $ref: '#/components/parameters/longId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransactionUpdate' }
+      responses:
+        '200':
+          description: Updated transaction.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Transactions]
+      summary: Delete transaction
+      description: Remove a transaction record.
+      parameters:
+        - $ref: '#/components/parameters/longId'
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # Manage financial goals; used to plan saving targets and monitor status.
+  /future-plans:
+    get:
+      tags: [Future Plans]
+      summary: List future plans
+      description: Retrieve plans, filter by `user_id` and/or `status`.
+      parameters:
+        - in: query
+          name: user_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: status
+          schema: { type: string }
+          description: One of PLANNING, SAVING, COMPLETED, CANCELLED.
+      responses:
+        '200':
+          description: List of plans.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/FuturePlan' }
+    post:
+      tags: [Future Plans]
+      summary: Create future plan
+      description: Define a new financial goal with target date and budget.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FuturePlanCreate' }
+      responses:
+        '201':
+          description: Plan created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FuturePlan' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /future-plans/{id}:
+    get:
+      tags: [Future Plans]
+      summary: Get future plan
+      description: Get a plan by id.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '200':
+          description: Plan found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FuturePlan' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Future Plans]
+      summary: Update future plan
+      description: Update title, dates, amounts, or status.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FuturePlanUpdate' }
+      responses:
+        '200':
+          description: Updated plan.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FuturePlan' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Future Plans]
+      summary: Delete future plan
+      description: Remove a plan and its movements if cascaded.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # Record savings/withdrawals against a plan; used to track progress.
+  /plan-movements:
+    get:
+      tags: [Plan Movements]
+      summary: List plan movements
+      description: Retrieve movements, optionally filtered by `plan_id`.
+      parameters:
+        - in: query
+          name: plan_id
+          schema: { type: integer }
+          description: Filter by plan id.
+      responses:
+        '200':
+          description: List of plan movements.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PlanMovement' }
+    post:
+      tags: [Plan Movements]
+      summary: Create plan movement
+      description: Add a deposit or withdrawal for a plan.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanMovementCreate' }
+      responses:
+        '201':
+          description: Movement created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanMovement' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /plan-movements/{id}:
+    get:
+      tags: [Plan Movements]
+      summary: Get plan movement
+      description: Get a plan movement by id.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '200':
+          description: Movement found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanMovement' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Plan Movements]
+      summary: Update plan movement
+      description: Update amount, date, note, or type.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanMovementUpdate' }
+      responses:
+        '200':
+          description: Updated movement.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanMovement' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Plan Movements]
+      summary: Delete plan movement
+      description: Remove a plan movement.
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  parameters:
+    uuidId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+      description: UUID identifier.
+    intId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer }
+      description: Integer identifier.
+    longId:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+      description: Long identifier.
+    page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 0, default: 0 }
+      description: Page number (0-based).
+    size:
+      in: query
+      name: size
+      schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+      description: Page size.
+    sort:
+      in: query
+      name: sort
+      schema: { type: string }
+      description: Sort criteria, e.g. "date,desc".
+
+  responses:
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    BadRequest:
+      description: Validation or request error.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    TransactionType:
+      type: string
+      enum: [income, expense]
+
+    User:
+      type: object
+      description: User entity without sensitive fields.
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        username: { type: string }
+        last_name: { type: string }
+        first_name: { type: string }
+        date_of_birth: { type: string, format: date }
+        gender: { type: string }
+        role: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    UserCreate:
+      type: object
+      required: [id, email, username, password]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        username: { type: string }
+        last_name: { type: string }
+        first_name: { type: string }
+        date_of_birth: { type: string, format: date }
+        gender: { type: string }
+        role: { type: string, default: ROLE_USER }
+    UserUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        username: { type: string }
+        last_name: { type: string }
+        first_name: { type: string }
+        date_of_birth: { type: string, format: date }
+        gender: { type: string }
+        role: { type: string }
+
+    Category:
+      type: object
+      properties:
+        id: { type: integer }
+        key: { type: string, description: Programmatic unique key. }
+        name: { type: string }
+        color_fill: { type: string }
+        color_bg: { type: string }
+        transaction_type: { $ref: '#/components/schemas/TransactionType' }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    CategoryCreate:
+      type: object
+      required: [key, name]
+      properties:
+        key: { type: string }
+        name: { type: string }
+        color_fill: { type: string }
+        color_bg: { type: string }
+        transaction_type: { $ref: '#/components/schemas/TransactionType' }
+    CategoryUpdate:
+      allOf:
+        - $ref: '#/components/schemas/CategoryCreate'
+
+    Account:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: string, format: uuid }
+        name: { type: string }
+        type: { type: string }
+        balance: { type: number, format: double }
+        currency: { type: string }
+    AccountCreate:
+      type: object
+      required: [user_id, name]
+      properties:
+        user_id: { type: string, format: uuid }
+        name: { type: string }
+        type: { type: string }
+        balance: { type: number, format: double, default: 0.0 }
+        currency: { type: string, example: USD }
+    AccountUpdate:
+      allOf:
+        - $ref: '#/components/schemas/AccountCreate'
+
+    Transaction:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        account_id: { type: integer, nullable: true }
+        user_id: { type: string, format: uuid, nullable: true }
+        category_id: { type: integer, nullable: true }
+        amount: { type: number, format: double }
+        transaction_type: { $ref: '#/components/schemas/TransactionType' }
+        description: { type: string }
+        date: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    TransactionCreate:
+      type: object
+      required: [amount, transaction_type, date]
+      properties:
+        account_id: { type: integer, nullable: true }
+        user_id: { type: string, format: uuid, nullable: true }
+        category_id: { type: integer, nullable: true }
+        amount: { type: number, format: double }
+        transaction_type: { $ref: '#/components/schemas/TransactionType' }
+        description: { type: string }
+        date: { type: string, format: date-time }
+    TransactionUpdate:
+      allOf:
+        - $ref: '#/components/schemas/TransactionCreate'
+
+    FuturePlan:
+      type: object
+      properties:
+        id: { type: integer }
+        user_id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        estimated_cost: { type: number, format: double }
+        target_date: { type: string, format: date }
+        priority: { type: string, description: One of HIGH, MEDIUM, LOW. }
+        status: { type: string, description: One of PLANNING, SAVING, COMPLETED, CANCELLED. }
+        done: { type: boolean, default: false }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    FuturePlanCreate:
+      type: object
+      required: [user_id, title]
+      properties:
+        user_id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        estimated_cost: { type: number, format: double }
+        target_date: { type: string, format: date }
+        priority: { type: string }
+        status: { type: string }
+        done: { type: boolean }
+    FuturePlanUpdate:
+      allOf:
+        - $ref: '#/components/schemas/FuturePlanCreate'
+
+    PlanMovement:
+      type: object
+      properties:
+        id: { type: integer }
+        plan_id: { type: integer }
+        amount: { type: number, format: double }
+        date: { type: string, format: date }
+        note: { type: string }
+        type: { type: boolean, description: true for deposit, false for withdrawal. }
+    PlanMovementCreate:
+      type: object
+      required: [plan_id, amount, date, type]
+      properties:
+        plan_id: { type: integer }
+        amount: { type: number, format: double }
+        date: { type: string, format: date }
+        note: { type: string }
+        type: { type: boolean }
+    PlanMovementUpdate:
+      allOf:
+        - $ref: '#/components/schemas/PlanMovementCreate'
+
+    PageUser:
+      type: object
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/User' }
+        page: { type: integer }
+        size: { type: integer }
+        total_elements: { type: integer, format: int64 }
+        total_pages: { type: integer }
+    PageTransaction:
+      type: object
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/Transaction' }
+        page: { type: integer }
+        size: { type: integer }
+        total_elements: { type: integer, format: int64 }
+        total_pages: { type: integer }
+
+    Error:
+      type: object
+      properties:
+        timestamp: { type: string, format: date-time }
+        status: { type: integer }
+        error: { type: string }
+        message: { type: string }
+        path: { type: string }
