@@ -1,0 +1,111 @@
+databaseChangeLog:
+  - changeSet:
+      id: v7-add-foreign-keys
+      author: ediel96
+      preConditions:
+        - onFail: CONTINUE
+        - onError: HALT
+        - dbms:
+            type: postgresql
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: accounts
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_accounts_user
+          preConditions:
+            - onFail: MARK_RAN
+            - tableExists:
+                tableName: accounts
+            - tableExists:
+                tableName: users
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: fk_accounts_user
+
+        - addForeignKeyConstraint:
+            baseTableName: transactions
+            baseColumnNames: account_id
+            referencedTableName: accounts
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_transactions_account
+          preConditions:
+            - onFail: MARK_RAN
+            - tableExists:
+                tableName: transactions
+            - tableExists:
+                tableName: accounts
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: fk_transactions_account
+
+        - addForeignKeyConstraint:
+            baseTableName: transactions
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_transactions_user
+          preConditions:
+            - onFail: MARK_RAN
+            - tableExists:
+                tableName: transactions
+            - tableExists:
+                tableName: users
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: fk_transactions_user
+
+        - addForeignKeyConstraint:
+            baseTableName: transactions
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            onDelete: SET NULL
+            constraintName: fk_transactions_category
+          preConditions:
+            - onFail: MARK_RAN
+            - tableExists:
+                tableName: transactions
+            - tableExists:
+                tableName: categories
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: fk_transactions_category
+
+        - addForeignKeyConstraint:
+            baseTableName: future_plans
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_future_plans_user
+          preConditions:
+            - onFail: MARK_RAN
+            - tableExists:
+                tableName: future_plans
+            - tableExists:
+                tableName: users
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: fk_future_plans_user
+
+        - addForeignKeyConstraint:
+            baseTableName: plan_movements
+            baseColumnNames: plan_id
+            referencedTableName: future_plans
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_plan_movements_plan
+          preConditions:
+            - onFail: MARK_RAN
+            - tableExists:
+                tableName: plan_movements
+            - tableExists:
+                tableName: future_plans
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: fk_plan_movements_plan

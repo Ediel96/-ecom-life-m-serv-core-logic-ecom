@@ -586,6 +586,10 @@ components:
       type: string
       enum: [income, expense]
 
+    FuturePlanStatus:
+      type: string
+      enum: [ PLANNING, SAVING, COMPLETED, CANCELLED ]
+
     User:
       type: object
       description: User entity without sensitive fields.
@@ -710,11 +714,14 @@ components:
         description: { type: string }
         estimated_cost: { type: number, format: double }
         target_date: { type: string, format: date }
-        priority: { type: string, description: One of HIGH, MEDIUM, LOW. }
-        status: { type: string, description: One of PLANNING, SAVING, COMPLETED, CANCELLED. }
+        priority:
+          $ref: '#/components/schemas/Priority'
+        status:
+          $ref: '#/components/schemas/FuturePlanStatus'
         done: { type: boolean, default: false }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+
     FuturePlanCreate:
       type: object
       required: [user_id, title]
@@ -731,6 +738,14 @@ components:
       allOf:
         - $ref: '#/components/schemas/FuturePlanCreate'
 
+    Priority:
+      type: string
+      enum: [ HIGH, MEDIUM, LOW ]
+
+    PlanMovementType:
+      type: string
+      enum: [ DEPOSIT, WITHDRAWAL, TRANSFER ]
+
     PlanMovement:
       type: object
       properties:
@@ -739,7 +754,9 @@ components:
         amount: { type: number, format: double }
         date: { type: string, format: date }
         note: { type: string }
-        type: { type: boolean, description: true for deposit, false for withdrawal. }
+        type:
+          $ref: '#/components/schemas/PlanMovementType'
+
     PlanMovementCreate:
       type: object
       required: [plan_id, amount, date, type]

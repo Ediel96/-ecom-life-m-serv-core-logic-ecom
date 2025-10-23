@@ -1,4 +1,21 @@
 databaseChangeLog:
   - include:
-      file: changelog/01-create-table.yaml
-      relativeToChangelogFile: true
+      file: db/changelog/01-create-enums.yaml
+  - include:
+      file: db/changelog/02-create-table-categories.yaml
+  - include:
+      file: db/changelog/02-create-table-users.yaml
+  - include:
+      file: db/changelog/03-create-table-accounts.yaml
+  - include:
+      file: db/changelog/04-create-table-transactions.yaml
+  - include:
+      file: db/changelog/05-create-table-future-plans.yaml
+  - include:
+      file: db/changelog/06-create-table-plan-movements.yaml
+  - include:
+      file: db/changelog/07-add-foreign-keys.yaml
+  - include:
+      file: db/changelog/08-add-indexes.yaml
+  - include:
+      file: db/changelog/09-add-comments.yaml

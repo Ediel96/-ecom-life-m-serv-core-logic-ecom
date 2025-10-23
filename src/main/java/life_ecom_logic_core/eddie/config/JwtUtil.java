@@ -45,25 +45,6 @@ public class JwtUtil {
         }
     }
 
-    public String generateToken(String username, String role) {
-        return generateToken(username, role, null, null);
-    }
-
-    public String generateToken(String username, String role, String userId, String name) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
-        if (userId != null) claims.put("userId", userId);
-        if (name != null) claims.put("name", name);
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(signingKey, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token);
