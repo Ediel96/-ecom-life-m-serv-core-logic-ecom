@@ -17,7 +17,6 @@ import java.util.List;
 
 
 @Service
-@RequiredArgsConstructor
 public class CategoryController implements CategoriesApiDelegate {
 
     @Override
@@ -32,17 +31,17 @@ public class CategoryController implements CategoriesApiDelegate {
 
     @Override
     public ResponseEntity<Category> categoriesIdGet(Integer id) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @Override
     public ResponseEntity<Category> categoriesIdPut(Integer id, CategoryUpdate categoryUpdate) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @Override
     public ResponseEntity<Category> categoriesPost(CategoryCreate categoryCreate) {
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
 }
