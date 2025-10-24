@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "plan_movements")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class PlanMovement {
+public class PlanMovementEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +17,7 @@ public class PlanMovement {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id", nullable = false)
-    private FuturePlan plan;
+    private FuturePlanEntity plan;
 
     @Column(name = "amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;

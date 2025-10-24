@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "categories")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Category {
+public class CategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +29,7 @@ public class Category {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false, columnDefinition = "transaction_type")
-    private TransactionType transactionType;
+    private TransactionTypeEnum transactionType;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt; // TIMESTAMPTZ

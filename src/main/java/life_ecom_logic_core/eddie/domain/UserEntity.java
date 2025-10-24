@@ -13,7 +13,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class User {
+public class UserEntity {
 
     @Id
     @Column(name = "id", nullable = false, columnDefinition = "uuid")
@@ -55,11 +55,11 @@ public class User {
     private LocalDateTime updatedAt; // TIMESTAMP
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<Account> accounts;
+    private List<AccountEntity> accounts;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Transaction> transactions;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<FuturePlan> futurePlans;
+    private List<FuturePlanEntity> futurePlans;
 }

@@ -11,7 +11,7 @@ import java.util.List;
 @Entity
 @Table(name = "future_plans")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class FuturePlan {
+public class FuturePlanEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +19,7 @@ public class FuturePlan {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, columnDefinition = "uuid")
-    private User user;
+    private UserEntity user;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -49,5 +49,5 @@ public class FuturePlan {
     private OffsetDateTime updatedAt; // TIMESTAMPTZ
 
     @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY)
-    private List<PlanMovement> movements;
+    private List<PlanMovementEntity> movements;
 }

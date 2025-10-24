@@ -9,7 +9,7 @@ import java.util.List;
 @Entity
 @Table(name = "accounts")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Account {
+public class AccountEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +17,7 @@ public class Account {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, columnDefinition = "uuid")
-    private User user;
+    private UserEntity user;
 
     @Column(name = "name")
     private String name;

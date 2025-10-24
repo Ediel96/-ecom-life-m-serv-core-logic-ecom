@@ -17,22 +17,22 @@ public class Transaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id")
-    private Account account; // optional
+    private AccountEntity account; // optional
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", columnDefinition = "uuid")
-    private User user; // optional
+    private UserEntity user; // optional
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
-    private Category category; // nullable (ON DELETE SET NULL)
+    private CategoryEntity category; // nullable (ON DELETE SET NULL)
 
     @Column(name = "amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false, columnDefinition = "transaction_type")
-    private TransactionType transactionType;
+    private TransactionTypeEnum transactionType;
 
     @Column(name = "description")
     private String description;
