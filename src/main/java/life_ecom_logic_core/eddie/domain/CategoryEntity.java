@@ -2,6 +2,8 @@ package life_ecom_logic_core.eddie.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -28,7 +30,8 @@ public class CategoryEntity {
     private String colorBg;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "transaction_type", nullable = false, columnDefinition = "transaction_type")
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "transaction_type", columnDefinition = "transaction_type", nullable = false)
     private TransactionTypeEnum transactionType;
 
     @Column(name = "created_at", nullable = false)

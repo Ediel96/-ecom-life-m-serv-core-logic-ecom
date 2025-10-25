@@ -46,9 +46,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        // Allow unauthenticated access to Categories API for now
-//                        .requestMatchers("/**").permitAll()
+//                         Allow unauthenticated access to Categories API for now
+                        .requestMatchers("/*/**").permitAll()
                         .anyRequest().authenticated()
+
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
                         .jwtAuthenticationConverter(jwtAuthConverter())

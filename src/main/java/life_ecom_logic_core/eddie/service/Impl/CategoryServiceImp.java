@@ -24,8 +24,8 @@ public class CategoryServiceImp  implements CategoryService {
     @Override
     public List<Category> list(@Nullable TransactionType transactionType) {
         List<CategoryEntity> entities = transactionType != null
-                ? categoryRepository.findAll()
-                : categoryRepository.findCategoryByTransactionsType(transactionType.toString());
+                ? categoryRepository.findCategoryByTransactionsType(transactionType.toString())
+                : categoryRepository.findAll();
 
         return entities.stream()
                 .map(CategoryMapper::toDto)
@@ -40,8 +40,8 @@ public class CategoryServiceImp  implements CategoryService {
     @Override
     public Category create(CategoryCreate categoryCreate) {
         CategoryEntity entity = CategoryMapper.toEntity(categoryCreate);
-        CategoryEntity saved = categoryRepository.save(entity);
-        return CategoryMapper.toDto(saved);
+        categoryRepository.save(entity);
+        return CategoryMapper.toDto(entity);
     }
 
     @Override

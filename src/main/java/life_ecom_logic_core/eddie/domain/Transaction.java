@@ -2,6 +2,8 @@ package life_ecom_logic_core.eddie.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
+import org.hibernate.annotations.JdbcType;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -31,7 +33,8 @@ public class Transaction {
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "transaction_type", nullable = false, columnDefinition = "transaction_type")
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "transaction_type", columnDefinition = "transaction_type", nullable = false)
     private TransactionTypeEnum transactionType;
 
     @Column(name = "description")
