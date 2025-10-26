@@ -637,6 +637,7 @@ components:
         id: { type: integer }
         key: { type: string, description: Programmatic unique key. }
         name: { type: string }
+        icon: { type: string }
         color_fill: { type: string }
         color_bg: { type: string }
         transaction_type: { $ref: '#/components/schemas/TransactionType' }
@@ -648,6 +649,7 @@ components:
       properties:
         key: { type: string }
         name: { type: string }
+        icon: { type: string }
         color_fill: { type: string }
         color_bg: { type: string }
         transaction_type: { $ref: '#/components/schemas/TransactionType' }

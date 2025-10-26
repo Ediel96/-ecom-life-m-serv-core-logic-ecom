@@ -11,6 +11,8 @@ import java.util.Optional;
 
 public final class CategoryMapper {
 
+    private static final String TYPE_NAME = "person";
+
     private CategoryMapper() {}
 
     public static CategoryEntity toEntity(CategoryCreate src) {
@@ -19,6 +21,8 @@ public final class CategoryMapper {
         e.setName(src.getName());
         e.setColorFill(src.getColorFill());
         e.setColorBg(src.getColorBg());
+        e.setIcon(src.getIcon());
+        e.setType(TYPE_NAME);
         e.setTransactionType(life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(src.getTransactionType().name().toLowerCase()));
         e.setCreatedAt(java.time.OffsetDateTime.now());
         e.setUpdatedAt(java.time.OffsetDateTime.now());
@@ -31,6 +35,7 @@ public final class CategoryMapper {
         dto.setName(e.getName());
         dto.setColorFill(e.getColorFill());
         dto.setColorBg(e.getColorBg());
+        dto.setIcon(e.getIcon());
         dto.setCreatedAt(e.getCreatedAt());
         dto.setUpdatedAt(e.getUpdatedAt());
         if (e.getTransactionType() != null) {
@@ -44,6 +49,7 @@ public final class CategoryMapper {
         CategoryEntity entity = e.orElseThrow(() -> new IllegalArgumentException("Category not found"));
         dto.setKey(entity.getKey());
         dto.setName(entity.getName());
+        dto.setIcon(entity.getIcon());
         dto.setColorFill(entity.getColorFill());
         dto.setColorBg(entity.getColorBg());
         dto.setCreatedAt(entity.getCreatedAt());
@@ -59,6 +65,7 @@ public final class CategoryMapper {
         if (update.getName() != null) entity.setName(update.getName());
         if (update.getColorFill() != null) entity.setColorFill(update.getColorFill());
         if (update.getColorBg() != null) entity.setColorBg(update.getColorBg());
+        if (update.getIcon() != null) entity.setIcon(update.getIcon());
         if (update.getTransactionType() != null) {
             entity.setTransactionType(
                     life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(

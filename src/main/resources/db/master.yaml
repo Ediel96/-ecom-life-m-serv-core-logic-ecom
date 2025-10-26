@@ -8,6 +8,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/03-create-table-accounts.yaml
   - include:
+      file: db/changelog/03-add-type-column-to-categories.yaml
+  - include:
       file: db/changelog/04-create-table-transactions.yaml
   - include:
       file: db/changelog/05-create-table-future-plans.yaml

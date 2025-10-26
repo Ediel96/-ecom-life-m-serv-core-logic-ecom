@@ -23,6 +23,12 @@ public class CategoryEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "type")
+    private String type;
+
+    @Column(name = "icon")
+    private String icon;
+
     @Column(name = "color_fill")
     private String colorFill;
 
