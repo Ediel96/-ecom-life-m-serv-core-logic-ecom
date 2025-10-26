@@ -5,6 +5,7 @@ import com.backend.organize_life.model.CategoryCreate;
 import com.backend.organize_life.model.CategoryUpdate;
 import com.backend.organize_life.model.TransactionType;
 import life_ecom_logic_core.eddie.domain.CategoryEntity;
+import life_ecom_logic_core.eddie.domain.TransactionTypeEnum;
 import life_ecom_logic_core.eddie.repository.CategoryRepository;
 import life_ecom_logic_core.eddie.service.CategoryService;
 import life_ecom_logic_core.eddie.service.mapper.CategoryMapper;
@@ -24,17 +25,17 @@ public class CategoryServiceImp  implements CategoryService {
     @Override
     public List<Category> list(@Nullable TransactionType transactionType) {
         List<CategoryEntity> entities = transactionType != null
-                ? categoryRepository.findCategoryByTransactionsType(transactionType.toString())
+                ? categoryRepository.findCategoryByTransactionsType(mapToEntityEnum(transactionType))
                 : categoryRepository.findAll();
 
         return entities.stream()
                 .map(CategoryMapper::toDto)
                 .collect(java.util.stream.Collectors.toList());
     }
-
     @Override
     public Optional<Category> get(Integer id) {
-        return categoryRepository.findById(id).map(CategoryMapper::toDto);
+        Optional<CategoryEntity> entity = categoryRepository.findById(id);
+        return Optional.of(CategoryMapper.toDto(entity));
     }
 
     @Override
@@ -47,8 +48,8 @@ public class CategoryServiceImp  implements CategoryService {
     @Override
     public Optional<Category> update(Integer id, CategoryUpdate categoryUpdate) {
         return categoryRepository.findById(id).map(e -> {
-            CategoryMapper.updateEntity(categoryUpdate, e);
-            return CategoryMapper.toDto(categoryRepository.save(e));
+            CategoryEntity update =  CategoryMapper.updateEntity(categoryUpdate, e);
+            return CategoryMapper.toDto(categoryRepository.save(update));
         });
     }
 
@@ -57,6 +58,13 @@ public class CategoryServiceImp  implements CategoryService {
         if (!categoryRepository.existsById(id)) return false;
         categoryRepository.deleteById(id);
         return true;
+    }
+
+    private TransactionTypeEnum mapToEntityEnum(TransactionType transactionType) {
+        return switch (transactionType) {
+            case INCOME -> TransactionTypeEnum.income;
+            case EXPENSE -> TransactionTypeEnum.expense;
+        };
     }
 
 }
