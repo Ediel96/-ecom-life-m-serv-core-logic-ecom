@@ -5,16 +5,20 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -45,14 +49,16 @@ public class JwtUtil {
         }
     }
 
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            log.info("Invalid JWT token: {}", e.getMessage());
-            return false;
+    public String extractTokenFromRequest() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            String header = request.getHeader("Authorization");
+            if (header != null && header.startsWith("Bearer ")) {
+                return header.substring(7);
+            }
         }
+        return null;
     }
 
     public Claims extractClaims(String token) {
@@ -68,9 +74,9 @@ public class JwtUtil {
         return v != null ? v.toString() : null;
     }
 
-    public String extractUserId(String token) {
+    public UUID extractUserId(String token) {
         Object v = extractClaims(token).get("userId");
-        return v != null ? v.toString() : null;
+        return v != null ? UUID.fromString(v.toString()) : null;
     }
 
     public String extractName(String token) {

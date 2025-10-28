@@ -52,3 +52,21 @@ databaseChangeLog:
                   defaultValueComputed: CURRENT_TIMESTAMP
                   constraints:
                     nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: varchar(50)
+                  defaultValue: 'bank'
+              - column:
+                  name: account_type
+                  type: varchar(50)
+                  defaultValue: 'saving'
+              - column:
+                  name: bank_name
+                  type: varchar(100)
+                  defaultValue: 'Unknown'
