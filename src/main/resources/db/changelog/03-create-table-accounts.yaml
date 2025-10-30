@@ -63,10 +63,6 @@ databaseChangeLog:
                   type: varchar(50)
                   defaultValue: 'bank'
               - column:
-                  name: account_type
-                  type: varchar(50)
-                  defaultValue: 'saving'
-              - column:
                   name: bank_name
                   type: varchar(100)
                   defaultValue: 'Unknown'

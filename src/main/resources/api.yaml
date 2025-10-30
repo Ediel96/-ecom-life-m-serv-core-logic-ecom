@@ -665,12 +665,12 @@ components:
         name: { type: string }
         type: { type: string }
         isActivated: { type: boolean, default: true }
-        balance: { type: number, format: double }
-        currency: { type: string }
-        account_type : { type: string }
+        balance: { type: number, format: double, default: 0.0 }
+        currency: { type: string, example: USD }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
-        bank_name : { type: string }
+        account_type: { type: string, default: 'bank' }
+        bank_name: { type: string }
     AccountCreate:
       type: object
       required: [name, type, currency]

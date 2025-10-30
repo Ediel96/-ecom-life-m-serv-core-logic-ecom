@@ -1,3 +1,4 @@
+// java
 package life_ecom_logic_core.eddie.service.mapper;
 
 import com.backend.organize_life.model.Account;
@@ -13,7 +14,7 @@ public class AccountMapper {
 
     public static Account toDto(AccountEntity entity) {
         Account dto = new Account();
-        dto.setId(entity.getId());
+        dto.setId(entity.getId().intValue());
         dto.setUserId(entity.getUser().getId());
         dto.setName(entity.getName());
         dto.setBalance(entity.getBalance() != null ? entity.getBalance().doubleValue() : null);
@@ -41,8 +42,19 @@ public class AccountMapper {
         }
 
         entity.setName(create.getName());
-        entity.setBalance(create.getBalance() != null ? BigDecimal.valueOf(create.getBalance()) : null);
-        entity.setType(create.getType());
+        entity.setBalance(create.getBalance() != null ? BigDecimal.valueOf(create.getBalance()) : BigDecimal.ZERO);
+
+        // type / accountType: prefer explicit accountType, then type, then default "bank"
+        String resolvedType = create.getType() != null ? create.getType() : "bank";
+        String resolvedAccountType = create.getAccountType() != null ? create.getAccountType() : resolvedType;
+        entity.setType(resolvedType);
+        entity.setAccountType(resolvedAccountType);
+
+        // currency, isActive, bankName defaults to match DB expectations
+        entity.setCurrency(create.getCurrency() != null ? create.getCurrency() : "USD");
+        entity.setIsActivated(create.getIsActivated() != null ? create.getIsActivated() : true);
+        entity.setBankName(create.getBankName() != null ? create.getBankName() : "Unknown");
+
         OffsetDateTime now = OffsetDateTime.now();
         entity.setCreatedAt(now);
         entity.setUpdatedAt(now);
