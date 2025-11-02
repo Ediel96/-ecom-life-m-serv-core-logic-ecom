@@ -35,10 +35,23 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<Account> list(@Nullable UUID userId) {
-        List<AccountEntity> entities = userId != null
-                ? accountRepository.findByUserId(userId)
-                : accountRepository.findAll();
+        String token = jwtUtil.extractTokenFromRequest();
+        UUID idUserToken = jwtUtil.extractUserId(token);
+        String role = jwtUtil.extractRole(token);
+        List<AccountEntity> entities;
 
+        if (role.equals("ROLE_ADMIN") && userId == null) {
+            entities = idUserToken != null
+                    ? accountRepository.findByUserId(idUserToken)
+                    : accountRepository.findAll();
+            return mapEntitiesToDto(entities);
+        }
+
+        entities = accountRepository.findByUserId(idUserToken);
+        return mapEntitiesToDto(entities);
+    }
+
+    private List<Account> mapEntitiesToDto(List<AccountEntity> entities) {
         return entities.stream()
                 .map(AccountMapper::toDto)
                 .collect(Collectors.toList());
@@ -52,13 +65,10 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account create(AccountCreate accountCreate) {
-        log.info("creating account");
+        log.info("creating account with name {} id {}", accountCreate.getName(), accountCreate.getUserId());
         String token =  jwtUtil.extractTokenFromRequest();
-        log.info("token: " + token);
         UUID userId = jwtUtil.extractUserId(token);
-        log.info("user id: " + userId);
         UserEntity user =  userRepository.findById(userId);
-        log.info("user info: " +  user);
         AccountEntity entity = AccountMapper.toEntity(accountCreate, user);
         accountRepository.save(entity);
         return AccountMapper.toDto(entity);
@@ -66,6 +76,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Optional<Account> update(Integer id, AccountUpdate accountUpdate) {
+        log.info("updating account with id {}", id);
         return accountRepository.findById(id.longValue()).map(entity -> {
             AccountMapper.updateEntity(accountUpdate, entity);
             return AccountMapper.toDto(accountRepository.save(entity));
