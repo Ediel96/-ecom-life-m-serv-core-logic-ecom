@@ -58,7 +58,7 @@ public class UserEntity {
     private List<AccountEntity> accounts;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<Transaction> transactions;
+    private List<TransactionEntity> transactions;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<FuturePlanEntity> futurePlans;

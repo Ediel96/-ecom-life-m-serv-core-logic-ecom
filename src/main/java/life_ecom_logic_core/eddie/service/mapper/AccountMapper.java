@@ -21,6 +21,7 @@ public class AccountMapper {
         dto.setCurrency(entity.getCurrency());
         dto.setAccountType(entity.getAccountType());
         dto.setType(entity.getType());
+        dto.setBankName(entity.getBankName());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         return dto;
@@ -65,15 +66,13 @@ public class AccountMapper {
         if (update == null || entity == null) {
             return entity;
         }
-        if (update.getName() != null) {
-            entity.setName(update.getName());
-        }
-        if (update.getBalance() != null) {
-            entity.setBalance(BigDecimal.valueOf(update.getBalance()));
-        }
-        if (update.getType() != null) {
-            entity.setType(update.getType());
-        }
+        if (update.getName() != null) entity.setName(update.getName());
+        if (update.getBalance() != null) entity.setBalance(BigDecimal.valueOf(update.getBalance()));
+        if (update.getType() != null) entity.setType(update.getType());
+        if (update.getAccountType() != null) entity.setAccountType(update.getAccountType());
+        if (update.getCurrency() != null) entity.setCurrency(update.getCurrency());
+        if (update.getIsActivated() != null) entity.setIsActivated(update.getIsActivated());
+        if (update.getBankName() != null) entity.setBankName(update.getBankName());
         entity.setUpdatedAt(OffsetDateTime.now());
         return entity;
     }

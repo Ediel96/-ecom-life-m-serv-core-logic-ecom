@@ -38,7 +38,7 @@ public class AccountEntity {
     private String currency = "USD";
 
     @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
-    private List<Transaction> transactions;
+    private List<TransactionEntity> transactions;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActivated = true;

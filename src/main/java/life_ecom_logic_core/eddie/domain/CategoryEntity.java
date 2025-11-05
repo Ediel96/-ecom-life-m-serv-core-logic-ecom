@@ -47,5 +47,5 @@ public class CategoryEntity {
     private OffsetDateTime updatedAt; // TIMESTAMPTZ
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
-    private List<Transaction> transactions;
+    private List<TransactionEntity> transactions;
 }
