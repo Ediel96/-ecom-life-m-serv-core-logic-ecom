@@ -5,13 +5,21 @@ import life_ecom_logic_core.eddie.domain.TransactionEntity;
 import life_ecom_logic_core.eddie.repository.TransactionRepository;
 import life_ecom_logic_core.eddie.service.TransactionsService;
 import life_ecom_logic_core.eddie.service.mapper.TransactionsMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.criteria.Predicate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class TransactionsServiceImpl implements TransactionsService {
 
@@ -23,22 +31,44 @@ public class TransactionsServiceImpl implements TransactionsService {
 
     @Override
     public PageTransaction list(Integer page, Integer size, String sort, UUID userId, Integer accountId, Integer categoryId, TransactionType transactionType, OffsetDateTime dateFrom, OffsetDateTime dateTo) {
-        // implement paging and mapping using repository
+        log.info("page: {}, size: {}, sort: {}, userId: {}, accountId: {}, categoryId: {}, transactionType: {}, dateFrom: {}, dateTo: {}",
+                page, size, sort, userId, accountId, categoryId, transactionType, dateFrom, dateTo);
+
         int p = (page == null || page < 0) ? 0 : page;
         int s = (size == null || size <= 0) ? 20 : size;
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(p, s);
-        org.springframework.data.domain.Page<TransactionEntity> pageEntities = transactionRepository.search(userId,
-                accountId,
-                categoryId,
-                transactionType,
-                dateFrom,
-                dateTo,
-                pageable);
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(p, s);
+
+        // Build Specification dynamically to avoid binding ambiguous null parameters
+        Specification<TransactionEntity> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (userId != null) {
+                predicates.add(cb.equal(root.get("userId"), userId));
+            }
+            if (accountId != null) {
+                predicates.add(cb.equal(root.get("accountId"), accountId));
+            }
+            if (categoryId != null) {
+                predicates.add(cb.equal(root.get("categoryId"), categoryId));
+            }
+            if (transactionType != null) {
+                // assumes entity.transactionType uses the same enum type; adjust if entity stores string
+                predicates.add(cb.equal(root.get("transactionType"), transactionType));
+            }
+            if (dateFrom != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("date"), dateFrom));
+            }
+            if (dateTo != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("date"), dateTo));
+            }
+
+            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<TransactionEntity> pageEntities = transactionRepository.findAll(spec, pageable);
 
         PageTransaction pages = new PageTransaction();
-        // map entities to DTOs
         pages.setContent(pageEntities.getContent().stream().map(transactionsMapper::toDto).collect(java.util.stream.Collectors.toList()));
-        // populate pagination metadata
         pages.setPage(p);
         pages.setSize(s);
         pages.setTotalElements(pageEntities.getTotalElements());

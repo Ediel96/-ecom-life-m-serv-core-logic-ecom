@@ -31,6 +31,7 @@ public final class CategoryMapper {
 
     public static Category toDto(CategoryEntity e) {
         Category dto = new Category();
+        dto.setId(e.getId());
         dto.setKey(e.getKey());
         dto.setName(e.getName());
         dto.setColorFill(e.getColorFill());

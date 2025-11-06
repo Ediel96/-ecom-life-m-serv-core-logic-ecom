@@ -1,3 +1,4 @@
+// java
 package life_ecom_logic_core.eddie.service.mapper;
 
 import com.backend.organize_life.model.*;
@@ -43,14 +44,19 @@ public class TransactionsMapper {
             dto.setAmount(null);
         }
 
-        // Transaction Type
+        // Transaction Type (API -> domain)
         if (src.getTransactionType() != null) {
-            dto.setTransactionType(life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(src.getTransactionType().name().toUpperCase()));
+            dto.setTransactionType(life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(src.getTransactionType().name().toLowerCase()));
         }
 
         // Description
         if (src.getDescription() != null) {
             dto.setDescription(src.getDescription());
+        }
+
+        // Date
+        if (src.getDate() != null) {
+            dto.setDate(src.getDate());
         }
 
         // Timestamps
@@ -143,7 +149,7 @@ public class TransactionsMapper {
             entity.setAmount(java.math.BigDecimal.valueOf(update.getAmount()));
         }
         if (update.getTransactionType() != null) {
-            entity.setTransactionType(life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(update.getTransactionType().name().toUpperCase()));
+            entity.setTransactionType(life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(update.getTransactionType().name().toLowerCase()));
         }
         if (update.getDescription() != null) {
             entity.setDescription(update.getDescription());
@@ -154,6 +160,4 @@ public class TransactionsMapper {
         entity.setUpdatedAt(java.time.OffsetDateTime.now());
         return entity;
     }
-
-
 }
