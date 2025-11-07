@@ -1,6 +1,7 @@
 package life_ecom_logic_core.eddie.service.Impl;
 
 import com.backend.organize_life.model.*;
+import jakarta.persistence.criteria.Path;
 import life_ecom_logic_core.eddie.domain.TransactionEntity;
 import life_ecom_logic_core.eddie.repository.TransactionRepository;
 import life_ecom_logic_core.eddie.service.TransactionsService;
@@ -38,23 +39,62 @@ public class TransactionsServiceImpl implements TransactionsService {
         int s = (size == null || size <= 0) ? 20 : size;
         Pageable pageable = org.springframework.data.domain.PageRequest.of(p, s);
 
-        // Build Specification dynamically to avoid binding ambiguous null parameters
+        // Build Specification dynamically and resiliently to different entity mappings
         Specification<TransactionEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (userId != null) {
-                predicates.add(cb.equal(root.get("userId"), userId));
+                Path<?> userPath;
+                try {
+                    userPath = root.get("userId"); // scalar FK property
+                } catch (IllegalArgumentException ex) {
+                    // fallback: relation 'user' with 'id'
+                    userPath = root.get("user").get("id");
+                }
+                predicates.add(cb.equal(userPath, userId));
             }
+
             if (accountId != null) {
-                predicates.add(cb.equal(root.get("accountId"), accountId));
+                Path<?> accountPath;
+                try {
+                    accountPath = root.get("accountId");
+                } catch (IllegalArgumentException ex) {
+                    accountPath = root.get("account").get("id");
+                }
+                predicates.add(cb.equal(accountPath, accountId));
             }
+
             if (categoryId != null) {
-                predicates.add(cb.equal(root.get("categoryId"), categoryId));
+                Path<?> categoryPath;
+                try {
+                    categoryPath = root.get("categoryId");
+                } catch (IllegalArgumentException ex) {
+                    categoryPath = root.get("category").get("id");
+                }
+                predicates.add(cb.equal(categoryPath, categoryId));
             }
+
             if (transactionType != null) {
-                // assumes entity.transactionType uses the same enum type; adjust if entity stores string
-                predicates.add(cb.equal(root.get("transactionType"), transactionType));
+                // compare using string label to avoid binding to DB enum type; normalize case
+                try {
+                    Path<?> typePath = root.get("transactionType");
+                    predicates.add(cb.or(
+                            cb.equal(typePath.as(String.class), transactionType.name()),
+                            cb.equal(cb.lower(typePath.as(String.class)), transactionType.name().toLowerCase())
+                    ));
+                } catch (IllegalArgumentException ex1) {
+                    try {
+                        Path<?> typePath = root.get("type");
+                        predicates.add(cb.or(
+                                cb.equal(typePath.as(String.class), transactionType.name()),
+                                cb.equal(cb.lower(typePath.as(String.class)), transactionType.name().toLowerCase())
+                        ));
+                    } catch (IllegalArgumentException ex2) {
+                        // attribute not found; ignore filter
+                    }
+                }
             }
+
             if (dateFrom != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("date"), dateFrom));
             }

@@ -280,6 +280,7 @@ paths:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/size'
         - $ref: '#/components/parameters/sort'
+        # snake_case (actual)
         - in: query
           name: user_id
           schema: { type: string, format: uuid }
@@ -305,6 +306,32 @@ paths:
           name: date_to
           schema: { type: string, format: date-time }
           description: Inclusive end date-time.
+        # camelCase (cliente moderno)
+        - in: query
+          name: userId
+          schema: { type: string, format: uuid }
+          description: Filter by user id (camelCase).
+        - in: query
+          name: accountId
+          schema: { type: integer }
+          description: Filter by account id (camelCase).
+        - in: query
+          name: categoryId
+          schema: { type: integer }
+          description: Filter by category id (camelCase).
+        - in: query
+          name: transactionType
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+          description: Filter by income or expense (camelCase).
+        - in: query
+          name: dateFrom
+          schema: { type: string, format: date-time }
+          description: Inclusive start date-time (camelCase).
+        - in: query
+          name: dateTo
+          schema: { type: string, format: date-time }
+          description: Inclusive end date-time (camelCase).
       responses:
         '200':
           description: List of transactions.
