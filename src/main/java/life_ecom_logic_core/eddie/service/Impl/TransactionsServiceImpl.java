@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.Path;
 import life_ecom_logic_core.eddie.domain.TransactionEntity;
 import life_ecom_logic_core.eddie.repository.TransactionRepository;
 import life_ecom_logic_core.eddie.service.TransactionsService;
+import life_ecom_logic_core.eddie.service.mapper.TransactionEnumMapper;
 import life_ecom_logic_core.eddie.service.mapper.TransactionsMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,8 @@ public class TransactionsServiceImpl implements TransactionsService {
     @Autowired
     private TransactionsMapper transactionsMapper;
 
+    private final TransactionEnumMapper transactionEnumMapper = new TransactionEnumMapper();
+
     @Override
     public PageTransaction list(Integer page, Integer size, String sort, UUID userId, Integer accountId, Integer categoryId, TransactionType transactionType, OffsetDateTime dateFrom, OffsetDateTime dateTo) {
         log.info("page: {}, size: {}, sort: {}, userId: {}, accountId: {}, categoryId: {}, transactionType: {}, dateFrom: {}, dateTo: {}",
@@ -39,73 +42,15 @@ public class TransactionsServiceImpl implements TransactionsService {
         int s = (size == null || size <= 0) ? 20 : size;
         Pageable pageable = org.springframework.data.domain.PageRequest.of(p, s);
 
-        // Build Specification dynamically and resiliently to different entity mappings
-        Specification<TransactionEntity> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (userId != null) {
-                Path<?> userPath;
-                try {
-                    userPath = root.get("userId"); // scalar FK property
-                } catch (IllegalArgumentException ex) {
-                    // fallback: relation 'user' with 'id'
-                    userPath = root.get("user").get("id");
-                }
-                predicates.add(cb.equal(userPath, userId));
-            }
-
-            if (accountId != null) {
-                Path<?> accountPath;
-                try {
-                    accountPath = root.get("accountId");
-                } catch (IllegalArgumentException ex) {
-                    accountPath = root.get("account").get("id");
-                }
-                predicates.add(cb.equal(accountPath, accountId));
-            }
-
-            if (categoryId != null) {
-                Path<?> categoryPath;
-                try {
-                    categoryPath = root.get("categoryId");
-                } catch (IllegalArgumentException ex) {
-                    categoryPath = root.get("category").get("id");
-                }
-                predicates.add(cb.equal(categoryPath, categoryId));
-            }
-
-            if (transactionType != null) {
-                // compare using string label to avoid binding to DB enum type; normalize case
-                try {
-                    Path<?> typePath = root.get("transactionType");
-                    predicates.add(cb.or(
-                            cb.equal(typePath.as(String.class), transactionType.name()),
-                            cb.equal(cb.lower(typePath.as(String.class)), transactionType.name().toLowerCase())
-                    ));
-                } catch (IllegalArgumentException ex1) {
-                    try {
-                        Path<?> typePath = root.get("type");
-                        predicates.add(cb.or(
-                                cb.equal(typePath.as(String.class), transactionType.name()),
-                                cb.equal(cb.lower(typePath.as(String.class)), transactionType.name().toLowerCase())
-                        ));
-                    } catch (IllegalArgumentException ex2) {
-                        // attribute not found; ignore filter
-                    }
-                }
-            }
-
-            if (dateFrom != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("date"), dateFrom));
-            }
-            if (dateTo != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("date"), dateTo));
-            }
-
-            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        Page<TransactionEntity> pageEntities = transactionRepository.findAll(spec, pageable);
+        Page<TransactionEntity> pageEntities = transactionRepository.search(
+                userId,
+                accountId,
+                categoryId,
+                transactionType != null ? transactionEnumMapper.mapToEntityEnum(transactionType) : null,
+                dateFrom,
+                dateTo,
+                pageable
+        );
 
         PageTransaction pages = new PageTransaction();
         pages.setContent(pageEntities.getContent().stream().map(transactionsMapper::toDto).collect(java.util.stream.Collectors.toList()));
@@ -115,7 +60,6 @@ public class TransactionsServiceImpl implements TransactionsService {
         pages.setTotalPages((int) pageEntities.getTotalPages());
         return pages;
     }
-
     @Override
     public Transaction get(Long id) {
         Optional<TransactionEntity> transactionEntity = transactionRepository.findById(id);

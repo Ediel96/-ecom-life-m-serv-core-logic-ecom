@@ -1,6 +1,7 @@
 package life_ecom_logic_core.eddie.domain;
 
 import jakarta.persistence.*;
+import life_ecom_logic_core.eddie.converter.TransactionTypeConverter;
 import lombok.*;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 import org.hibernate.annotations.JdbcType;
@@ -34,6 +35,7 @@ public class TransactionEntity {
 
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Convert(converter = TransactionTypeConverter.class)
     @Column(name = "transaction_type", columnDefinition = "transaction_type", nullable = false)
     private TransactionTypeEnum transactionType;
 

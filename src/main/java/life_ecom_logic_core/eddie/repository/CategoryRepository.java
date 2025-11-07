@@ -14,14 +14,7 @@ public interface CategoryRepository  extends JpaRepository<CategoryEntity, Integ
 
     List<CategoryEntity> findAll();
 
-    CategoryEntity findCategoryById(Integer id);
-
     @Query("SELECT c FROM CategoryEntity c WHERE c.transactionType = ?1")
     List<CategoryEntity> findCategoryByTransactionsType(TransactionTypeEnum key);
-
-//    @Modifying
-//    @Query("INSERT INTO CategoryEntity (key, name, colorFill, colorBg, transactionType) " +
-//            "VALUES (?1, ?2, ?3, ?4, CAST(?5 AS transactionType))")
-//    void saveQuery(String key, String name, String colorFill, String colorBg, String transactionType);
 
 }

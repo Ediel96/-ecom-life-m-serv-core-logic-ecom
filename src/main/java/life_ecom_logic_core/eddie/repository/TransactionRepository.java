@@ -2,6 +2,7 @@ package life_ecom_logic_core.eddie.repository;
 
 import com.backend.organize_life.model.TransactionType;
 import life_ecom_logic_core.eddie.domain.TransactionEntity;
+import life_ecom_logic_core.eddie.domain.TransactionTypeEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,15 +16,48 @@ import java.util.UUID;
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Long>, JpaSpecificationExecutor<TransactionEntity> {
 
     @Query("""
-    select t from TransactionEntity t
-    where (:userId is null or t.user.id = :userId)
-      and (:accountId is null or t.account.id = :accountId)
-      and (:categoryId is null or t.category.id = :categoryId)
-      and (COALESCE(:transactionType, t.transactionType) = t.transactionType)
-      and (:dateFrom is null or t.date >= :dateFrom)
-      and (:dateTo is null or t.date <= :dateTo)
-    """)
+        select t from TransactionEntity t
+        where t.user.id = coalesce(:userId, t.user.id)
+          and t.account.id = coalesce(:accountId, t.account.id)
+          and t.category.id = coalesce(:categoryId, t.category.id)
+          and t.transactionType = coalesce(:transactionType, t.transactionType)
+          and t.date >= coalesce(:dateFrom, t.date)
+          and t.date <= coalesce(:dateTo, t.date)
+        """)
     Page<TransactionEntity> search(
+            @Param("userId") UUID userId,
+            @Param("accountId") Integer accountId,
+            @Param("categoryId") Integer categoryId,
+            @Param("transactionType") TransactionTypeEnum transactionType,
+            @Param("dateFrom") OffsetDateTime dateFrom,
+            @Param("dateTo") OffsetDateTime dateTo,
+            Pageable pageable
+    );
+
+    @Query(
+            value = """
+    select t.*
+    from public.transactions t
+    where (:userId is null or t.user_id = cast(:userId as uuid))
+      and (:accountId is null or t.account_id = :accountId)
+      and (:categoryId is null or t.category_id = :categoryId)
+      and (:transactionType is null or t.transaction_type = cast(:transactionType as text)::public."transaction_type")
+      and (cast(:dateFrom as timestamptz) is null or t."date" >= cast(:dateFrom as timestamptz))
+      and (cast(:dateTo as timestamptz) is null or t."date" <= cast(:dateTo as timestamptz))
+    """,
+            countQuery = """
+    select count(*)
+    from public.transactions t
+    where (:userId is null or t.user_id = cast(:userId as uuid))
+      and (:accountId is null or t.account_id = :accountId)
+      and (:categoryId is null or t.category_id = :categoryId)
+      and (:transactionType is null or t.transaction_type = cast(:transactionType as text)::public."transaction_type")
+      and (cast(:dateFrom as timestamptz) is null or t."date" >= cast(:dateFrom as timestamptz))
+      and (cast(:dateTo as timestamptz) is null or t."date" <= cast(:dateTo as timestamptz))
+    """,
+            nativeQuery = true
+    )
+    Page<TransactionEntity> searchNative(
             @Param("userId") UUID userId,
             @Param("accountId") Integer accountId,
             @Param("categoryId") Integer categoryId,

@@ -4,11 +4,13 @@ import com.backend.organize_life.model.Category;
 import com.backend.organize_life.model.CategoryCreate;
 import com.backend.organize_life.model.CategoryUpdate;
 import com.backend.organize_life.model.TransactionType;
+import life_ecom_logic_core.eddie.converter.TransactionTypeConverter;
 import life_ecom_logic_core.eddie.domain.CategoryEntity;
 import life_ecom_logic_core.eddie.domain.TransactionTypeEnum;
 import life_ecom_logic_core.eddie.repository.CategoryRepository;
 import life_ecom_logic_core.eddie.service.CategoryService;
 import life_ecom_logic_core.eddie.service.mapper.CategoryMapper;
+import life_ecom_logic_core.eddie.service.mapper.TransactionEnumMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -22,10 +24,12 @@ public class CategoryServiceImp  implements CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    private final TransactionEnumMapper transactionEnumMapper = new TransactionEnumMapper();
+
     @Override
     public List<Category> list(@Nullable TransactionType transactionType) {
         List<CategoryEntity> entities = transactionType != null
-                ? categoryRepository.findCategoryByTransactionsType(mapToEntityEnum(transactionType))
+                ? categoryRepository.findCategoryByTransactionsType(transactionEnumMapper.mapToEntityEnum(transactionType))
                 : categoryRepository.findAll();
 
         return entities.stream()
@@ -60,11 +64,5 @@ public class CategoryServiceImp  implements CategoryService {
         return true;
     }
 
-    private TransactionTypeEnum mapToEntityEnum(TransactionType transactionType) {
-        return switch (transactionType) {
-            case INCOME -> TransactionTypeEnum.income;
-            case EXPENSE -> TransactionTypeEnum.expense;
-        };
-    }
 
 }
