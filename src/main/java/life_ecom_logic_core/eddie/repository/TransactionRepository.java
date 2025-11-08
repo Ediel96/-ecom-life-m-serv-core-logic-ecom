@@ -34,37 +34,4 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
             Pageable pageable
     );
 
-    @Query(
-            value = """
-    select t.*
-    from public.transactions t
-    where (:userId is null or t.user_id = cast(:userId as uuid))
-      and (:accountId is null or t.account_id = :accountId)
-      and (:categoryId is null or t.category_id = :categoryId)
-      and (:transactionType is null or t.transaction_type = cast(:transactionType as text)::public."transaction_type")
-      and (cast(:dateFrom as timestamptz) is null or t."date" >= cast(:dateFrom as timestamptz))
-      and (cast(:dateTo as timestamptz) is null or t."date" <= cast(:dateTo as timestamptz))
-    """,
-            countQuery = """
-    select count(*)
-    from public.transactions t
-    where (:userId is null or t.user_id = cast(:userId as uuid))
-      and (:accountId is null or t.account_id = :accountId)
-      and (:categoryId is null or t.category_id = :categoryId)
-      and (:transactionType is null or t.transaction_type = cast(:transactionType as text)::public."transaction_type")
-      and (cast(:dateFrom as timestamptz) is null or t."date" >= cast(:dateFrom as timestamptz))
-      and (cast(:dateTo as timestamptz) is null or t."date" <= cast(:dateTo as timestamptz))
-    """,
-            nativeQuery = true
-    )
-    Page<TransactionEntity> searchNative(
-            @Param("userId") UUID userId,
-            @Param("accountId") Integer accountId,
-            @Param("categoryId") Integer categoryId,
-            @Param("transactionType") TransactionType transactionType,
-            @Param("dateFrom") OffsetDateTime dateFrom,
-            @Param("dateTo") OffsetDateTime dateTo,
-            Pageable pageable
-    );
-
 }
