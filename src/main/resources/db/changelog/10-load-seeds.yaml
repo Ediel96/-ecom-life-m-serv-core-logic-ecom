@@ -1,0 +1,30 @@
+# yaml
+databaseChangeLog:
+  - changeSet:
+      id: load-categories-01
+      author: dev
+      changes:
+        - sqlFile:
+            path: db/seeds/01-categories.sql
+            encoding: UTF-8
+            relativeToChangelogFile: false
+
+  - changeSet:
+      id: load-users-02
+      author: dev
+      changes:
+        - sqlFile:
+            path: db/seeds/02-users.sql
+            encoding: UTF-8
+            relativeToChangelogFile: false
+            splitStatements: true
+            endDelimiter: ;
+
+  - changeSet:
+      id: load-accounts-03
+      author: dev
+      changes:
+        - sqlFile:
+            path: db/seeds/03-accounts.sql
+            encoding: UTF-8
+            relativeToChangelogFile: false

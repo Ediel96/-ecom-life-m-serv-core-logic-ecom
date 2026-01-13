@@ -40,6 +40,7 @@ INSERT INTO public.categories ("key","name",color_fill,color_bg,"transaction_typ
 SELECT 'gift','Gift','#ec4899','bg-pink-500','income'::public."transaction_type",'2025-10-25 23:51:11.821'::timestamptz,'2025-10-25 23:51:11.821'::timestamptz,'🎁','emoji'
     WHERE NOT EXISTS (SELECT 1 FROM public.categories WHERE "key" = 'gift');
 
+-- NECESIDADES BÁSICAS
 INSERT INTO public.categories ("key","name",color_fill,color_bg,"transaction_type",created_at,updated_at,icon,"type")
 SELECT 'groceries','Groceries','#fb923c','bg-orange-400','expense'::public."transaction_type",NOW(),NOW(),'🛒','emoji'
     WHERE NOT EXISTS (SELECT 1 FROM public.categories WHERE "key" = 'groceries');
