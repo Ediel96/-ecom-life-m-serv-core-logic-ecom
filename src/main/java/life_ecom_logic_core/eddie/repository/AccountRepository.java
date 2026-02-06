@@ -14,7 +14,7 @@ public interface AccountRepository  extends JpaRepository<AccountEntity, Long> {
     AccountEntity findAccountById(Long id);
     List<AccountEntity> findAll();
 
-    @Query("SELECT a FROM AccountEntity a WHERE a.user.id = ?1")
-    List<AccountEntity> findByUserId(UUID id);
+    @Query("SELECT a FROM AccountEntity a WHERE a.user.id = ?1 or a.type = ?2")
+    List<AccountEntity> findByUserId(UUID id, String type);
 
 }

@@ -23,3 +23,5 @@ databaseChangeLog:
       file: db/changelog/09-add-comments.yaml
   - include:
       file: db/changelog/10-load-seeds.yaml
+  - include:
+      file: db/changelog/11-add-column-transactions.yaml

@@ -613,6 +613,11 @@ components:
       type: string
       enum: [income, expense]
 
+    FrequencyType:
+      type: string
+      enum: [month,week,year,day,weekend,none,custom,
+             monday,tuesday,wednesday,thursday,friday,saturday,sunday]
+
     FuturePlanStatus:
       type: string
       enum: [ PLANNING, SAVING, COMPLETED, CANCELLED ]
@@ -729,6 +734,10 @@ components:
         date: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
+        notification: { type: boolean, default: false }
+        notification_date: { type: string, format: date-time }
+        frequency: { $ref: '#/components/schemas/FrequencyType' }
+        lifestyle: { type: boolean, default: false }
     TransactionCreate:
       type: object
       required: [amount, transaction_type, date]
@@ -740,6 +749,10 @@ components:
         transaction_type: { $ref: '#/components/schemas/TransactionType' }
         description: { type: string }
         date: { type: string, format: date-time }
+        notification : { type: boolean, default: false }
+        notification_date : { type: string, format: date-time }
+        frequency : { $ref: '#/components/schemas/FrequencyType' }
+        lifestyle : { type: boolean, default: false }
     TransactionUpdate:
       allOf:
         - $ref: '#/components/schemas/TransactionCreate'

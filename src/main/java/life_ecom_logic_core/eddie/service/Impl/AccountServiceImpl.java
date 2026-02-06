@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 @Service
 public class AccountServiceImpl implements AccountService {
 
+    String DEFAULT = "DEFAULT";
+
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -42,12 +44,12 @@ public class AccountServiceImpl implements AccountService {
 
         if (role.equals("ROLE_ADMIN") && userId == null) {
             entities = idUserToken != null
-                    ? accountRepository.findByUserId(idUserToken)
+                    ? accountRepository.findByUserId(idUserToken, this.DEFAULT)
                     : accountRepository.findAll();
             return mapEntitiesToDto(entities);
         }
 
-        entities = accountRepository.findByUserId(idUserToken);
+        entities = accountRepository.findByUserId(idUserToken, this.DEFAULT);
         return mapEntitiesToDto(entities);
     }
 

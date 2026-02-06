@@ -46,7 +46,11 @@ public class TransactionsMapper {
 
         // Transaction Type (API -> domain)
         if (src.getTransactionType() != null) {
-            dto.setTransactionType(life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(src.getTransactionType().name().toLowerCase()));
+            dto.setTransactionType(
+                    life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(
+                            src.getTransactionType().name().toLowerCase(java.util.Locale.ROOT)
+                    )
+            );
         }
 
         // Description
@@ -57,6 +61,28 @@ public class TransactionsMapper {
         // Date
         if (src.getDate() != null) {
             dto.setDate(src.getDate());
+        }
+
+        // Frequency (API -> domain): UPPER from API -> lower in domain
+        if (src.getFrequency() != null) {
+            dto.setFrequency(
+                    life_ecom_logic_core.eddie.domain.FrequencyType.valueOf(
+                            src.getFrequency().name().toLowerCase(java.util.Locale.ROOT)
+                    )
+            );
+        } else {
+            dto.setFrequency(null);
+        }
+
+        // Booleans
+        dto.setLifestyle(Boolean.TRUE.equals(src.getLifestyle()));
+        dto.setNotification(Boolean.TRUE.equals(src.getNotification()));
+
+        // Notification date
+        if (src.getNotificationDate() != null) {
+            dto.setNotificationDate(src.getNotificationDate().toLocalDate());
+        } else {
+            dto.setNotificationDate(null);
         }
 
         // Timestamps
@@ -81,13 +107,33 @@ public class TransactionsMapper {
         transaction.setAmount(entity.getAmount() != null ? entity.getAmount().doubleValue() : null);
         transaction.setTransactionType(
                 entity.getTransactionType() != null
-                        ? TransactionType.valueOf(entity.getTransactionType().name().toUpperCase())
+                        ? TransactionType.valueOf(entity.getTransactionType().name().toUpperCase(java.util.Locale.ROOT))
                         : null
         );
         transaction.setDescription(entity.getDescription());
         transaction.setDate(entity.getDate());
         transaction.setCreatedAt(entity.getCreatedAt());
         transaction.setUpdatedAt(entity.getUpdatedAt());
+
+        // Frequency (domain -> API): lower in domain -> UPPER in API
+        transaction.setFrequency(
+                entity.getFrequency() != null
+                        ? FrequencyType.valueOf(entity.getFrequency().name().toUpperCase(java.util.Locale.ROOT))
+                        : null
+        );
+
+        transaction.setLifestyle(entity.isLifestyle());
+        transaction.setNotification(entity.isNotification());
+
+        transaction.setNotificationDate(
+                entity.getNotificationDate() != null
+                        ? java.time.OffsetDateTime.of(
+                        entity.getNotificationDate(),
+                        java.time.LocalTime.MIDNIGHT,
+                        java.time.ZoneOffset.UTC
+                )
+                        : null
+        );
 
         return transaction;
     }
@@ -112,7 +158,7 @@ public class TransactionsMapper {
         }
 
         if (dto.getTransactionType() != null) {
-            upd.setTransactionType(TransactionType.valueOf(dto.getTransactionType().name().toUpperCase()));
+            upd.setTransactionType(TransactionType.valueOf(dto.getTransactionType().name().toUpperCase(java.util.Locale.ROOT)));
         }
 
         if (dto.getDescription() != null) {
@@ -149,7 +195,11 @@ public class TransactionsMapper {
             entity.setAmount(java.math.BigDecimal.valueOf(update.getAmount()));
         }
         if (update.getTransactionType() != null) {
-            entity.setTransactionType(life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(update.getTransactionType().name().toLowerCase()));
+            entity.setTransactionType(
+                    life_ecom_logic_core.eddie.domain.TransactionTypeEnum.valueOf(
+                            update.getTransactionType().name().toLowerCase(java.util.Locale.ROOT)
+                    )
+            );
         }
         if (update.getDescription() != null) {
             entity.setDescription(update.getDescription());
@@ -157,6 +207,27 @@ public class TransactionsMapper {
         if (update.getDate() != null) {
             entity.setDate(update.getDate());
         }
+
+        if (update.getFrequency() != null) {
+            entity.setFrequency(
+                    life_ecom_logic_core.eddie.domain.FrequencyType.valueOf(
+                            update.getFrequency().name().toLowerCase(java.util.Locale.ROOT)
+                    )
+            );
+        }
+
+        if (update.getLifestyle() != null) {
+            entity.setLifestyle(update.getLifestyle());
+        }
+
+        if (update.getNotification() != null) {
+            entity.setNotification(update.getNotification());
+        }
+
+        if (update.getNotificationDate() != null) {
+            entity.setNotificationDate(update.getNotificationDate().toLocalDate());
+        }
+
         entity.setUpdatedAt(java.time.OffsetDateTime.now());
         return entity;
     }
