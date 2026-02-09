@@ -1,18 +1,22 @@
 services:
   logic-ecom-service:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: logic-ecom-service
     ports:
       - "8083:8083"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      # Usamos el nombre del contenedor del Proyecto A
+      SERVER_PORT: 8083
+      # IMPORTANTE: Usamos el nombre del contenedor de la DB que ya está corriendo
       SPRING_DATASOURCE_URL: jdbc:postgresql://life-organizer-db:5432/life_organizer
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: your_password
     networks:
-      - life-shared-network # <--- Se une a la red externa
+      - life-shared-network
+    restart: unless-stopped
 
 networks:
   life-shared-network:
-    external: true  # <--- IMPORTANTE: Indica que la red ya existe
+    external: true
