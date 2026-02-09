@@ -1,0 +1,18 @@
+name: Despliegue Automatico
+
+on:
+  push:
+    branches: [ stating ] # Se activa al hacer push a main
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted # <--- Esto le dice a GitHub que use tu Raspberry
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v3
+
+      - name: Ejecutar Docker Compose
+        run: |
+          # Cambia esta ruta por la carpeta real de tu proyecto en la Raspberry
+          cd /root/proyectos/life-organizer/-ecom-life-m-serv-core-logic-ecom
+          docker compose up -d --build
