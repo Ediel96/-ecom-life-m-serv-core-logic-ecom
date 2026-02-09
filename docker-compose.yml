@@ -1,39 +1,18 @@
 services:
-  postgres-db:
-    image: postgres:15-alpine
-    container_name: life-organizer-db
-    environment:
-      POSTGRES_DB: life_organizer
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_password}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d life_organizer"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
   logic-ecom-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: logic-ecom-service
     ports:
       - "8083:8083"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SERVER_PORT: 8083
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/life_organizer
+      # Usamos el nombre del contenedor del Proyecto A
+      SPRING_DATASOURCE_URL: jdbc:postgresql://life-organizer-db:5432/life_organizer
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-your_password}
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-    restart: unless-stopped
+      SPRING_DATASOURCE_PASSWORD: your_password
+    networks:
+      - life-shared-network # <--- Se une a la red externa
 
-volumes:
-  postgres_data:
+networks:
+  life-shared-network:
+    external: true  # <--- IMPORTANTE: Indica que la red ya existe
