@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
 
   auth-service:
-    image: tuusuario/auth-service:latest  # ⚠️ Cambia "tuusuario" por tu usuario de Docker Hub
+    image: edihamilton/logic-ecom-service:latest  # ⚠️ Cambia "tuusuario" por tu usuario de Docker Hub
     container_name: auth-service
     ports:
       - "8083:8083"
