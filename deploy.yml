@@ -2,7 +2,7 @@ name: Despliegue Automatico
 
 on:
   push:
-    branches: [ stating ] # Se activa al hacer push a main
+    branches: [ staging ] # Se activa al hacer push a main
 
 jobs:
   build-and-deploy:
