@@ -1,4 +1,4 @@
-FROM eclipse-temurin:20-jdk AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 
 # Copia archivos clave para cachear dependencias

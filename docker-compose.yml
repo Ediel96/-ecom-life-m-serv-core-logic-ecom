@@ -7,19 +7,20 @@ services:
     environment:
       POSTGRES_DB: life_organizer
       POSTGRES_USER: root
-      POSTGRES_PASSWORD: your_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Usa variable de entorno
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U root -d life_organizer"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   auth-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: tuusuario/auth-service:latest  # ⚠️ Cambia "tuusuario" por tu usuario de Docker Hub
     container_name: auth-service
     ports:
       - "8083:8083"
@@ -28,8 +29,11 @@ services:
       SERVER_PORT: 8083
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/life_organizer
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: your_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
       postgres-db:
         condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  postgres_data:
