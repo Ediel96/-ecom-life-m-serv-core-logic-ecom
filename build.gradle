@@ -98,5 +98,14 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 springBoot {
-    mainClass = 'com.backend.organize_life.OrganizeLifeApplication'
+    mainClass = 'life_ecom_logic_core.eddie.EddieApplication'
+}
+
+bootJar {
+    mainClass = 'life_ecom_logic_core.eddie.EddieApplication'
+    archiveClassifier = ''
+}
+
+jar {
+    enabled = false
 }
