@@ -7,8 +7,8 @@ import life_ecom_logic_core.eddie.repository.TransactionRepository;
 import life_ecom_logic_core.eddie.service.TransactionsService;
 import life_ecom_logic_core.eddie.service.mapper.TransactionEnumMapper;
 import life_ecom_logic_core.eddie.service.mapper.TransactionsMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,33 +16,69 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Service implementation for Transaction operations.
+ * Handles CRUD operations and business logic for financial transactions.
+ *
+ * @author eddie
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TransactionsServiceImpl implements TransactionsService {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private static final String ROLE_USER = "ROLE_USER";
+    private static final int DEFAULT_PAGE = 0;
+    private static final int DEFAULT_PAGE_SIZE = 20;
 
-    @Autowired
-    private TransactionRepository transactionRepository;
+    /** Fields blocked from sorting */
+    private static final Set<String> BLOCKED_SORT_FIELDS = Set.of(
+            "updated_at", "date", "updatedAt"
+    );
 
-    @Autowired
-    private TransactionsMapper transactionsMapper;
+    /** Mapping from API field names (snake_case) to entity property names (camelCase) */
+    private static final Map<String, String> SORT_FIELD_ALIASES = Map.ofEntries(
+            Map.entry("created_at", "createdAt"),
+            Map.entry("updated_at", "updatedAt"),
+            Map.entry("transaction_type", "transactionType"),
+            Map.entry("amount", "amount"),
+            Map.entry("description", "description"),
+            Map.entry("date", "date")
+    );
 
+    private final JwtUtil jwtUtil;
+    private final TransactionRepository transactionRepository;
+    private final TransactionsMapper transactionsMapper;
     private final TransactionEnumMapper transactionEnumMapper = new TransactionEnumMapper();
 
+    /**
+     * Lists transactions with pagination and optional filters.
+     *
+     * @param page page number (0-based)
+     * @param size page size
+     * @param sort sorting criteria
+     * @param userId user ID filter
+     * @param accountId account ID filter
+     * @param categoryId category ID filter
+     * @param transactionType transaction type filter
+     * @param dateFrom start date filter
+     * @param dateTo end date filter
+     * @return paginated list of transactions
+     */
     @Override
-    public PageTransaction list(Integer page, Integer size, String sort, UUID userId, Integer accountId, Integer categoryId, TransactionType transactionType, OffsetDateTime dateFrom, OffsetDateTime dateTo) {
-        log.info("page: {}, size: {}, sort: {}, userId: {}, accountId: {}, categoryId: {}, transactionType: {}, dateFrom: {}, dateTo: {}",
-                page, size, sort, userId, accountId, categoryId, transactionType, dateFrom, dateTo);
+    public PageTransaction list(Integer page, Integer size, String sort, UUID userId,
+                                 Integer accountId, Integer categoryId,
+                                 TransactionType transactionType, OffsetDateTime dateFrom,
+                                 OffsetDateTime dateTo) {
+        log.debug("Listing transactions - page: {}, size: {}, userId: {}", page, size, userId);
 
-        int p = (page == null || page < 0) ? 0 : page;
-        int s = (size == null || size <= 0) ? 20 : size;
-
-        Pageable pageable = PageRequest.of(p, s, buildSort(sort)); // apply sort
+        int pageNumber = normalizePageNumber(page);
+        int pageSize = normalizePageSize(size);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, buildSort(sort));
 
         Page<TransactionEntity> pageEntities = transactionRepository.search(
                 userId,
@@ -54,97 +90,143 @@ public class TransactionsServiceImpl implements TransactionsService {
                 pageable
         );
 
-        PageTransaction pages = new PageTransaction();
-        pages.setContent(pageEntities.getContent().stream().map(transactionsMapper::toDto).collect(java.util.stream.Collectors.toList()));
-        pages.setPage(p);
-        pages.setSize(s);
-        pages.setTotalElements(pageEntities.getTotalElements());
-        pages.setTotalPages((int) pageEntities.getTotalPages());
-        return pages;
+        return buildPageResponse(pageEntities, pageNumber, pageSize);
     }
 
+    /**
+     * Retrieves a specific transaction by ID.
+     *
+     * @param id the transaction ID
+     * @return the transaction if found, null otherwise
+     */
     @Override
     public Transaction get(Long id) {
-        Optional<TransactionEntity> transactionEntity = transactionRepository.findById(id);
-        return transactionEntity.map(transactionsMapper::toDto).orElse(null);
+        log.debug("Fetching transaction with id: {}", id);
+        return transactionRepository.findById(id)
+                .map(transactionsMapper::toDto)
+                .orElse(null);
     }
 
+    /**
+     * Deletes a transaction by ID.
+     *
+     * @param id the transaction ID to delete
+     * @return true if deleted, false if not found
+     */
     @Override
     public boolean delete(Long id) {
-        // TODO: delete by id
-        Optional<TransactionEntity> existing = transactionRepository.findById(id);
-        if (existing.isEmpty()) {
+        log.info("Deleting transaction with id: {}", id);
+        if (!transactionRepository.existsById(id)) {
             return false;
         }
         transactionRepository.deleteById(id);
         return true;
     }
 
+    /**
+     * Updates an existing transaction.
+     *
+     * @param id the transaction ID to update
+     * @param update the update data
+     * @return the updated transaction if found, null otherwise
+     */
     @Override
     public Transaction update(Long id, TransactionUpdate update) {
+        log.info("Updating transaction with id: {}", id);
         return transactionRepository.findById(id)
-                .map(e -> {
-                    TransactionEntity updateEntity = transactionsMapper.updateEntity(update, e);
-                    return transactionsMapper.toDto(transactionRepository.save(updateEntity));
+                .map(entity -> {
+                    TransactionEntity updatedEntity = transactionsMapper.updateEntity(update, entity);
+                    return transactionsMapper.toDto(transactionRepository.save(updatedEntity));
                 })
                 .orElse(null);
     }
 
+    /**
+     * Creates a new transaction.
+     * The user ID is automatically set based on the authenticated user's role.
+     *
+     * @param create the transaction creation data
+     * @return the created transaction
+     */
     @Override
     public Transaction create(TransactionCreate create) {
+        log.info("Creating new transaction");
 
         String token = jwtUtil.extractTokenFromRequest();
-        UUID idUserToken = jwtUtil.extractUserId(token);
+        UUID tokenUserId = jwtUtil.extractUserId(token);
         String role = jwtUtil.extractRole(token);
 
-        if ( create != null && create.getUserId() != null && role.equals("ROLE_USER") )
-            create.userId( idUserToken);
+        // Set user ID based on role
+        if (create != null) {
+            if (ROLE_USER.equals(role) || create.getUserId() == null) {
+                create.userId(tokenUserId);
+            }
+        }
 
-        else if ( create != null && create.getUserId() == null ) create.userId(idUserToken);
-
-        TransactionEntity transactionEntity =
-                transactionRepository.save(transactionsMapper.toEntity(create));
-        return transactionsMapper.toDto(transactionEntity);
+        TransactionEntity savedEntity = transactionRepository.save(
+                transactionsMapper.toEntity(create));
+        return transactionsMapper.toDto(savedEntity);
     }
 
-    // Keep blocking only what you really don't want to sort by
-    private static final java.util.Set<String> BLOCKED_SORT_FIELDS =
-            java.util.Set.of("updated_at","date","updatedAt"); // 'created_at' unblocked
+    // ================== Helper Methods ==================
 
-    // Map API fields (snake_case) to entity property names (camelCase)
-    private static final java.util.Map<String, String> SORT_ALIASES = java.util.Map.ofEntries(
-            java.util.Map.entry("created_at", "createdAt"),
-            java.util.Map.entry("updated_at", "updatedAt"),
-            java.util.Map.entry("transaction_type", "transactionType"),
-            java.util.Map.entry("amount", "amount"),
-            java.util.Map.entry("description", "description"),
-            java.util.Map.entry("date", "date")
-    );
+    private int normalizePageNumber(Integer page) {
+        return (page == null || page < 0) ? DEFAULT_PAGE : page;
+    }
+
+    private int normalizePageSize(Integer size) {
+        return (size == null || size <= 0) ? DEFAULT_PAGE_SIZE : size;
+    }
+
+    private PageTransaction buildPageResponse(Page<TransactionEntity> pageEntities,
+                                               int page, int size) {
+        PageTransaction response = new PageTransaction();
+        response.setContent(pageEntities.getContent().stream()
+                .map(transactionsMapper::toDto)
+                .collect(Collectors.toList()));
+        response.setPage(page);
+        response.setSize(size);
+        response.setTotalElements(pageEntities.getTotalElements());
+        response.setTotalPages(pageEntities.getTotalPages());
+        return response;
+    }
 
     private Sort buildSort(String sortParam) {
         if (sortParam == null || sortParam.isBlank()) {
             return Sort.unsorted();
         }
-        java.util.List<Sort.Order> orders = new java.util.ArrayList<>();
+
+        List<Sort.Order> orders = new ArrayList<>();
         for (String part : sortParam.split(";")) {
             String[] tokens = part.trim().split(",");
             if (tokens.length == 0) continue;
 
-            String raw = tokens[0].trim();
-            // basic whitelist to avoid injection, allow nested props like account.id
-            if (!raw.matches("[A-Za-z0-9_\\.]+")) continue;
+            String rawField = tokens[0].trim();
 
-            // map snake_case to entity property
-            String property = SORT_ALIASES.getOrDefault(raw, raw);
+            // Validate field name format
+            if (!rawField.matches("[A-Za-z0-9_\\.]+")) continue;
 
-            // skip blocked fields after mapping
-            if (BLOCKED_SORT_FIELDS.contains(raw) || BLOCKED_SORT_FIELDS.contains(property)) continue;
+            // Map to entity property name
+            String property = SORT_FIELD_ALIASES.getOrDefault(rawField, rawField);
 
-            Sort.Direction dir = (tokens.length > 1 && "desc".equalsIgnoreCase(tokens[1].trim()))
-                    ? Sort.Direction.DESC : Sort.Direction.ASC;
+            // Skip blocked fields
+            if (isBlockedSortField(rawField, property)) continue;
 
-            orders.add(new Sort.Order(dir, property));
+            Sort.Direction direction = parseSortDirection(tokens);
+            orders.add(new Sort.Order(direction, property));
         }
+
         return orders.isEmpty() ? Sort.unsorted() : Sort.by(orders);
+    }
+
+    private boolean isBlockedSortField(String rawField, String property) {
+        return BLOCKED_SORT_FIELDS.contains(rawField) || BLOCKED_SORT_FIELDS.contains(property);
+    }
+
+    private Sort.Direction parseSortDirection(String[] tokens) {
+        if (tokens.length > 1 && "desc".equalsIgnoreCase(tokens[1].trim())) {
+            return Sort.Direction.DESC;
+        }
+        return Sort.Direction.ASC;
     }
 }
