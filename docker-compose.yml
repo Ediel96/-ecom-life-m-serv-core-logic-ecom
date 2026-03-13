@@ -16,16 +16,6 @@ services:
       - life-shared-network
     restart: unless-stopped
 
-  cloudflare-tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflare-tunnel
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=eyJhIjoiNGEwNDc3MGMwMDcwMTA0ZjQzY2YyN2NlNDZiYzAyMGMiLCJ0IjoiNGNkNjZkM2ItMjllZC00MjVjLWE5ZTctN2I1YzVjMWJmZTQzIiwicyI6Ik9UUTFOREptTTJZdFltVmhOaTAwWTJWaUxXRmtOVE10WVdNMll6ZG1aV05qT1RNMyJ9
-    networks:
-      - life-shared-network
-
 networks:
   life-shared-network:
     external: true
