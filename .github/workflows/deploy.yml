@@ -14,7 +14,7 @@ jobs:
       - name: Ejecutar Docker Compose
         run: |
           # Entrar a la carpeta del proyecto en la Raspberry
-          cd /root/proyectos/life-organizer/-ecom-life-m-serv-core-logic-ecom
+          cd /root/server/projects/proyectos/life-organizer/-ecom-life-m-serv-core-logic-ecom
           
           # Actualizar el código a la rama staging
           git fetch origin staging
