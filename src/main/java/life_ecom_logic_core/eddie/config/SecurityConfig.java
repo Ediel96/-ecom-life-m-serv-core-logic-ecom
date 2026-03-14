@@ -46,8 +46,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error").permitAll()
-//                         Allow unauthenticated access to Categories API for now
-                        .requestMatchers("/*/**").permitAll()
                         .anyRequest().authenticated()
 
                 )
