@@ -25,3 +25,13 @@ databaseChangeLog:
       file: db/changelog/10-load-seeds.yaml
   - include:
       file: db/changelog/11-add-column-transactions.yaml
+  - include:
+      file: db/changelog/12-add-notification-type-enum.yaml
+  - include:
+      file: db/changelog/13-add-columns-transactions.yaml
+  - include:
+      file: db/changelog/14-create-table-recurring-transactions.yaml
+  - include:
+      file: db/changelog/15-create-table-notifications.yaml
+  - include:
+      file: db/changelog/16-create-views-functions.yaml

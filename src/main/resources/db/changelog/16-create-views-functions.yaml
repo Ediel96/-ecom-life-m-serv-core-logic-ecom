@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: v16-create-lifestyle-summary-view
+      author: ediel96
+      changes:
+        - createView:
+            viewName: lifestyle_summary
+            replaceIfExists: true
+            selectQuery: >-
+              SELECT
+                t.user_id,
+                c.name AS category_name,
+                DATE_TRUNC('month', t.date) AS month,
+                COUNT(*) AS transaction_count,
+                SUM(t.amount) AS total_amount,
+                AVG(t.amount) AS average_amount
+              FROM transactions t
+              JOIN categories c ON t.category_id = c.id
+              WHERE t.lifestyle = true
+              AND t.transaction_type = 'expense'
+              GROUP BY t.user_id, c.name, DATE_TRUNC('month', t.date)
+      rollback:
+        - dropView:
+            viewName: lifestyle_summary
+
+  - changeSet:
+      id: v16-create-process-recurring-function
+      author: ediel96
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE OR REPLACE FUNCTION process_recurring_transactions()
+              RETURNS void AS $$
+              DECLARE
+                  rec RECORD;
+                  new_transaction_id bigint;
+              BEGIN
+                  FOR rec IN
+                      SELECT rt.*, t.description, t.amount, t.category_id, t.account_id
+                      FROM recurring_transactions rt
+                      JOIN transactions t ON rt.transaction_id = t.id
+                      WHERE rt.is_active = true
+                      AND rt.next_due_date <= CURRENT_DATE
+                      AND (rt.end_date IS NULL OR rt.end_date >= CURRENT_DATE)
+                  LOOP
+                      INSERT INTO transactions (
+                          account_id, user_id, category_id, amount,
+                          transaction_type, description, date,
+                          is_recurring, parent_transaction_id, lifestyle,
+                          notification, notification_date
+                      ) VALUES (
+                          rec.account_id, rec.user_id, rec.category_id, rec.amount,
+                          'expense', rec.description, rec.next_due_date,
+                          true, rec.transaction_id, rec.is_lifestyle,
+                          true, (rec.next_due_date - rec.notification_days_before)
+                      ) RETURNING id INTO new_transaction_id;
+
+                      INSERT INTO notifications (
+                          user_id, recurring_transaction_id, transaction_id,
+                          type, title, message, scheduled_for
+                      ) VALUES (
+                          rec.user_id, rec.id, new_transaction_id,
+                          'recurring_payment',
+                          'Pago recurrente generado',
+                          format('Se ha generado automáticamente tu pago de %s por $%s',
+                                 rec.description, rec.amount),
+                          rec.next_due_date
+                      );
+
+                      UPDATE recurring_transactions
+                      SET last_processed_date = rec.next_due_date,
+                          next_due_date = CASE rec.frequency
+                              WHEN 'day'   THEN rec.next_due_date + (rec.interval_count || ' days')::interval
+                              WHEN 'week'  THEN rec.next_due_date + (rec.interval_count || ' weeks')::interval
+                              WHEN 'month' THEN rec.next_due_date + (rec.interval_count || ' months')::interval
+                              WHEN 'year'  THEN rec.next_due_date + (rec.interval_count || ' years')::interval
+                              ELSE rec.next_due_date + interval '1 month'
+                          END,
+                          updated_at = now()
+                      WHERE id = rec.id;
+                  END LOOP;
+              END;
+              $$ LANGUAGE plpgsql;
+            splitStatements: false
+      rollback:
+        - sql:
+            sql: DROP FUNCTION IF EXISTS process_recurring_transactions();

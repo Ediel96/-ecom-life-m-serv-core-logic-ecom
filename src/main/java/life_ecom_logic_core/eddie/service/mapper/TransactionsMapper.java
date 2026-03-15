@@ -77,13 +77,16 @@ public class TransactionsMapper {
         // Booleans
         dto.setLifestyle(Boolean.TRUE.equals(src.getLifestyle()));
         dto.setNotification(Boolean.TRUE.equals(src.getNotification()));
+        dto.setRecurring(Boolean.TRUE.equals(src.getIsRecurring()));
+        dto.setEstimatedAmount(Boolean.TRUE.equals(src.getEstimatedAmount()));
 
-        // Notification date
-        if (src.getNotificationDate() != null) {
-            dto.setNotificationDate(src.getNotificationDate().toLocalDate());
-        } else {
-            dto.setNotificationDate(null);
+        // Nullable parent transaction id
+        if (src.getParentTransactionId() != null && src.getParentTransactionId().isPresent()) {
+            dto.setParentTransactionId(src.getParentTransactionId().get());
         }
+
+        // Notification date (LocalDate in both API model and entity)
+        dto.setNotificationDate(src.getNotificationDate());
 
         // Timestamps
         dto.setCreatedAt(java.time.OffsetDateTime.now());
@@ -124,16 +127,15 @@ public class TransactionsMapper {
 
         transaction.setLifestyle(entity.isLifestyle());
         transaction.setNotification(entity.isNotification());
+        transaction.setIsRecurring(entity.isRecurring());
+        transaction.setEstimatedAmount(entity.isEstimatedAmount());
+        transaction.setParentTransactionId(
+                entity.getParentTransactionId() != null
+                        ? JsonNullable.of(entity.getParentTransactionId())
+                        : JsonNullable.undefined());
 
-        transaction.setNotificationDate(
-                entity.getNotificationDate() != null
-                        ? java.time.OffsetDateTime.of(
-                        entity.getNotificationDate(),
-                        java.time.LocalTime.MIDNIGHT,
-                        java.time.ZoneOffset.UTC
-                )
-                        : null
-        );
+        // Notification date (entity stores LocalDate, API model is also LocalDate)
+        transaction.setNotificationDate(entity.getNotificationDate());
 
         return transaction;
     }
@@ -225,7 +227,16 @@ public class TransactionsMapper {
         }
 
         if (update.getNotificationDate() != null) {
-            entity.setNotificationDate(update.getNotificationDate().toLocalDate());
+            entity.setNotificationDate(update.getNotificationDate());
+        }
+        if (update.getIsRecurring() != null) {
+            entity.setRecurring(update.getIsRecurring());
+        }
+        if (update.getEstimatedAmount() != null) {
+            entity.setEstimatedAmount(update.getEstimatedAmount());
+        }
+        if (update.getParentTransactionId() != null && update.getParentTransactionId().isPresent()) {
+            entity.setParentTransactionId(update.getParentTransactionId().get());
         }
 
         entity.setUpdatedAt(java.time.OffsetDateTime.now());

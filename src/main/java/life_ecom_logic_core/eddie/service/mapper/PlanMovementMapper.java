@@ -27,7 +27,7 @@ public class PlanMovementMapper {
 
         entity.setDate(src.getDate());
         entity.setNote(src.getNote());
-        entity.setType(src.getType());
+        entity.setType(toBoolean(src.getType()));
 
         return entity;
     }
@@ -78,9 +78,15 @@ public class PlanMovementMapper {
         }
 
         if (update.getType() != null) {
-            entity.setType(update.getType());
+            entity.setType(toBoolean(update.getType()));
         }
 
         return entity;
+    }
+
+    /** PlanMovementType enum → Boolean stored in DB (DEPOSIT=true, WITHDRAWAL=false). */
+    private Boolean toBoolean(PlanMovementType type) {
+        if (type == null) return null;
+        return type == PlanMovementType.DEPOSIT;
     }
 }

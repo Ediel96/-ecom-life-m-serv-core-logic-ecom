@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: v14-create-table-recurring-transactions
+      author: ediel96
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: recurring_transactions
+      changes:
+        - createTable:
+            tableName: recurring_transactions
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_recurring_transactions
+              - column:
+                  name: transaction_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_recurring_transactions_transaction
+                    references: transactions(id)
+                    deleteCascade: true
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_recurring_transactions_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: frequency
+                  type: frequency_type
+                  constraints:
+                    nullable: false
+              - column:
+                  name: interval_count
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: DATE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: next_due_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_processed_date
+                  type: DATE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: notification_days_before
+                  type: INT
+                  defaultValueNumeric: 1
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_lifestyle
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE INDEX IF NOT EXISTS idx_recurring_next_due
+                ON recurring_transactions (next_due_date)
+                WHERE is_active = true;
+
+              CREATE INDEX IF NOT EXISTS idx_recurring_lifestyle
+                ON recurring_transactions (is_lifestyle)
+                WHERE is_active = true;
+            splitStatements: false
+
+      rollback:
+        - dropTable:
+            tableName: recurring_transactions

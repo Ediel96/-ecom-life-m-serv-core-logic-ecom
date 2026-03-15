@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: v15-create-table-notifications
+      author: ediel96
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: notifications
+      changes:
+        - createTable:
+            tableName: notifications
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_notifications
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_notifications_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: recurring_transaction_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_notifications_recurring
+                    references: recurring_transactions(id)
+                    deleteCascade: true
+              - column:
+                  name: transaction_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_notifications_transaction
+                    references: transactions(id)
+                    deleteCascade: true
+              - column:
+                  name: type
+                  type: notification_type
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scheduled_for
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sent_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: true
+              - column:
+                  name: is_read
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE INDEX IF NOT EXISTS idx_notifications_scheduled
+                ON notifications (scheduled_for)
+                WHERE sent_at IS NULL;
+
+              CREATE INDEX IF NOT EXISTS idx_notifications_user_read
+                ON notifications (user_id, is_read);
+            splitStatements: false
+
+      rollback:
+        - dropTable:
+            tableName: notifications
