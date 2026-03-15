@@ -35,3 +35,7 @@ databaseChangeLog:
       file: db/changelog/15-create-table-notifications.yaml
   - include:
       file: db/changelog/16-create-views-functions.yaml
+  - include:
+      file: db/changelog/17-refactor-recurring-transaction-relation.yaml
+  - include:
+      file: db/changelog/18-drop-parent-transaction-id.yaml

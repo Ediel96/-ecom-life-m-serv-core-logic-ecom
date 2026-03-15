@@ -1,17 +1,19 @@
 package life_ecom_logic_core.eddie.domain;
 
 import jakarta.persistence.*;
+import life_ecom_logic_core.eddie.converter.TransactionTypeConverter;
 import lombok.*;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 /**
  * JPA entity for the recurring_transactions table.
- * Stores a rule that auto-generates transactions on a schedule via
- * the process_recurring_transactions() PostgreSQL function.
+ * Stores the rule config AND the template data used to generate each transaction.
+ * Generated transactions reference back via transactions.recurring_transaction_id.
  */
 @Entity
 @Table(name = "recurring_transactions")
@@ -22,14 +24,33 @@ public class RecurringTransactionEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Template transaction whose amount/category/account are copied on each run. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_id", nullable = false)
-    private TransactionEntity transaction;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", columnDefinition = "uuid", nullable = false)
     private UserEntity user;
+
+    // ── Template data (what gets copied into each generated transaction) ───────
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private AccountEntity account;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private CategoryEntity category;
+
+    @Column(name = "amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal amount;
+
+    @Column(name = "description")
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Convert(converter = TransactionTypeConverter.class)
+    @Column(name = "transaction_type", columnDefinition = "transaction_type", nullable = false)
+    private TransactionTypeEnum transactionType;
+
+    // ── Schedule config ───────────────────────────────────────────────────────
 
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
@@ -58,7 +79,7 @@ public class RecurringTransactionEntity {
     @Column(name = "notification_days_before")
     private int notificationDaysBefore;
 
-    /** Field named 'active' so Lombok generates isActive() correctly. Maps to is_active column. */
+    /** Maps to is_active column. Lombok generates isActive() for boolean field named 'active'. */
     @Column(name = "is_active", nullable = false)
     private boolean active;
 

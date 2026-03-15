@@ -1027,7 +1027,7 @@ components:
         account_id: { type: integer, nullable: true }
         user_id: { type: string, format: uuid, nullable: true }
         category_id: { type: integer, nullable: true }
-        parent_transaction_id: { type: integer, format: int64, nullable: true, description: "ID of the original transaction that originated this recurring copy." }
+        recurring_transaction_id: { type: integer, format: int64, nullable: true, description: "ID of the recurring rule that generated this transaction." }
         amount: { type: number, format: double }
         transaction_type: { $ref: '#/components/schemas/TransactionType' }
         description: { type: string }
@@ -1047,7 +1047,7 @@ components:
         account_id: { type: integer, nullable: true }
         user_id: { type: string, format: uuid, nullable: true }
         category_id: { type: integer, nullable: true }
-        parent_transaction_id: { type: integer, format: int64, nullable: true }
+        recurring_transaction_id: { type: integer, format: int64, nullable: true }
         amount: { type: number, format: double }
         transaction_type: { $ref: '#/components/schemas/TransactionType' }
         description: { type: string }
@@ -1137,11 +1137,19 @@ components:
 
     RecurringTransaction:
       type: object
-      description: A rule that auto-generates transactions on a schedule.
+      description: >
+        A rule that auto-generates transactions on a schedule.
+        Stores its own template data (amount, category, account) so that
+        each generated transaction is self-contained. Generated transactions
+        reference back via transactions.recurring_transaction_id.
       properties:
         id: { type: integer, format: int64 }
-        transaction_id: { type: integer, format: int64, description: "Template transaction used as the source for generated copies." }
         user_id: { type: string, format: uuid }
+        account_id: { type: integer, format: int64, nullable: true }
+        category_id: { type: integer, nullable: true }
+        amount: { type: number, format: double }
+        description: { type: string }
+        transaction_type: { $ref: '#/components/schemas/TransactionType' }
         frequency: { $ref: '#/components/schemas/FrequencyType' }
         interval_count: { type: integer, default: 1, description: "Number of frequency units between executions (e.g. 2 + month = every 2 months)." }
         start_date: { type: string, format: date }
@@ -1156,10 +1164,14 @@ components:
 
     RecurringTransactionCreate:
       type: object
-      required: [transaction_id, user_id, frequency, start_date, next_due_date]
+      required: [user_id, amount, transaction_type, frequency, start_date, next_due_date]
       properties:
-        transaction_id: { type: integer, format: int64 }
         user_id: { type: string, format: uuid }
+        account_id: { type: integer, format: int64, nullable: true }
+        category_id: { type: integer, nullable: true }
+        amount: { type: number, format: double }
+        description: { type: string }
+        transaction_type: { $ref: '#/components/schemas/TransactionType' }
         frequency: { $ref: '#/components/schemas/FrequencyType' }
         interval_count: { type: integer, default: 1, minimum: 1 }
         start_date: { type: string, format: date }
@@ -1173,6 +1185,11 @@ components:
       type: object
       description: All fields optional; only provided fields are updated.
       properties:
+        account_id: { type: integer, format: int64, nullable: true }
+        category_id: { type: integer, nullable: true }
+        amount: { type: number, format: double }
+        description: { type: string }
+        transaction_type: { $ref: '#/components/schemas/TransactionType' }
         frequency: { $ref: '#/components/schemas/FrequencyType' }
         interval_count: { type: integer, minimum: 1 }
         start_date: { type: string, format: date }

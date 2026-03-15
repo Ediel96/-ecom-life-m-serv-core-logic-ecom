@@ -59,7 +59,7 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Override
     @Transactional
     public RecurringTransaction create(RecurringTransactionCreate create) {
-        log.info("Creating recurring transaction for transactionId: {}", create.getTransactionId());
+        log.info("Creating recurring transaction for userId: {}", create.getUserId());
         RecurringTransactionEntity saved = recurringRepository.save(mapper.toEntity(create));
         return mapper.toDto(saved);
     }

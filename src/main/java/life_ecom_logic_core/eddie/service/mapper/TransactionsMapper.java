@@ -80,9 +80,9 @@ public class TransactionsMapper {
         dto.setRecurring(Boolean.TRUE.equals(src.getIsRecurring()));
         dto.setEstimatedAmount(Boolean.TRUE.equals(src.getEstimatedAmount()));
 
-        // Nullable parent transaction id
-        if (src.getParentTransactionId() != null && src.getParentTransactionId().isPresent()) {
-            dto.setParentTransactionId(src.getParentTransactionId().get());
+        // Nullable FK fields
+        if (src.getRecurringTransactionId() != null && src.getRecurringTransactionId().isPresent()) {
+            dto.setRecurringTransactionId(src.getRecurringTransactionId().get());
         }
 
         // Notification date (LocalDate in both API model and entity)
@@ -129,9 +129,9 @@ public class TransactionsMapper {
         transaction.setNotification(entity.isNotification());
         transaction.setIsRecurring(entity.isRecurring());
         transaction.setEstimatedAmount(entity.isEstimatedAmount());
-        transaction.setParentTransactionId(
-                entity.getParentTransactionId() != null
-                        ? JsonNullable.of(entity.getParentTransactionId())
+        transaction.setRecurringTransactionId(
+                entity.getRecurringTransactionId() != null
+                        ? JsonNullable.of(entity.getRecurringTransactionId())
                         : JsonNullable.undefined());
 
         // Notification date (entity stores LocalDate, API model is also LocalDate)
@@ -235,8 +235,8 @@ public class TransactionsMapper {
         if (update.getEstimatedAmount() != null) {
             entity.setEstimatedAmount(update.getEstimatedAmount());
         }
-        if (update.getParentTransactionId() != null && update.getParentTransactionId().isPresent()) {
-            entity.setParentTransactionId(update.getParentTransactionId().get());
+        if (update.getRecurringTransactionId() != null && update.getRecurringTransactionId().isPresent()) {
+            entity.setRecurringTransactionId(update.getRecurringTransactionId().get());
         }
 
         entity.setUpdatedAt(java.time.OffsetDateTime.now());

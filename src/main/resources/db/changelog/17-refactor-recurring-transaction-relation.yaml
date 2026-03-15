@@ -1,0 +1,169 @@
+databaseChangeLog:
+
+  # 1. Drop FK y columna transaction_id de recurring_transactions
+  - changeSet:
+      id: v17-drop-transaction-id-from-recurring
+      author: ediel96
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE recurring_transactions
+                DROP CONSTRAINT IF EXISTS fk_recurring_transactions_transaction;
+              ALTER TABLE recurring_transactions
+                DROP COLUMN IF EXISTS transaction_id;
+            splitStatements: false
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE recurring_transactions
+                ADD COLUMN transaction_id BIGINT;
+              ALTER TABLE recurring_transactions
+                ADD CONSTRAINT fk_recurring_transactions_transaction
+                  FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE;
+
+  # 2. Añadir columnas de plantilla directamente en recurring_transactions
+  - changeSet:
+      id: v17-add-template-columns-to-recurring
+      author: ediel96
+      changes:
+        - addColumn:
+            tableName: recurring_transactions
+            columns:
+              - column:
+                  name: account_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_recurring_account
+                    references: accounts(id)
+              - column:
+                  name: category_id
+                  type: INT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_recurring_category
+                    references: categories(id)
+              - column:
+                  name: amount
+                  type: NUMERIC(12,2)
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: 0
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: transaction_type
+                  type: transaction_type
+                  defaultValue: expense
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: recurring_transactions
+            columnName: account_id
+        - dropColumn:
+            tableName: recurring_transactions
+            columnName: category_id
+        - dropColumn:
+            tableName: recurring_transactions
+            columnName: amount
+        - dropColumn:
+            tableName: recurring_transactions
+            columnName: description
+        - dropColumn:
+            tableName: recurring_transactions
+            columnName: transaction_type
+
+  # 3. Añadir recurring_transaction_id a transactions
+  - changeSet:
+      id: v17-add-recurring-transaction-id-to-transactions
+      author: ediel96
+      changes:
+        - addColumn:
+            tableName: transactions
+            columns:
+              - column:
+                  name: recurring_transaction_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                    foreignKeyName: fk_transactions_recurring
+                    references: recurring_transactions(id)
+        - createIndex:
+            indexName: idx_transactions_recurring_id
+            tableName: transactions
+            columns:
+              - column:
+                  name: recurring_transaction_id
+      rollback:
+        - dropColumn:
+            tableName: transactions
+            columnName: recurring_transaction_id
+
+  # 4. Actualizar process_recurring_transactions() para usar los campos propios de recurring_transactions
+  - changeSet:
+      id: v17-update-process-recurring-function
+      author: ediel96
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              CREATE OR REPLACE FUNCTION process_recurring_transactions()
+              RETURNS void AS $$
+              DECLARE
+                  rec RECORD;
+                  new_transaction_id bigint;
+              BEGIN
+                  FOR rec IN
+                      SELECT *
+                      FROM recurring_transactions
+                      WHERE is_active = true
+                        AND next_due_date <= CURRENT_DATE
+                        AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+                  LOOP
+                      INSERT INTO transactions (
+                          account_id, user_id, category_id, amount,
+                          transaction_type, description, date,
+                          is_recurring, recurring_transaction_id, lifestyle,
+                          notification, notification_date,
+                          estimated_amount
+                      ) VALUES (
+                          rec.account_id, rec.user_id, rec.category_id, rec.amount,
+                          rec.transaction_type, rec.description, rec.next_due_date::timestamptz,
+                          true, rec.id, rec.is_lifestyle,
+                          true, (rec.next_due_date - rec.notification_days_before),
+                          false
+                      ) RETURNING id INTO new_transaction_id;
+
+                      INSERT INTO notifications (
+                          user_id, recurring_transaction_id, transaction_id,
+                          type, title, message, scheduled_for
+                      ) VALUES (
+                          rec.user_id, rec.id, new_transaction_id,
+                          'recurring_payment',
+                          'Pago recurrente generado',
+                          format('Se ha generado automáticamente tu pago de %s por $%s',
+                                 rec.description, rec.amount),
+                          rec.next_due_date::timestamptz
+                      );
+
+                      UPDATE recurring_transactions
+                      SET last_processed_date = rec.next_due_date,
+                          next_due_date = CASE frequency
+                              WHEN 'day'   THEN rec.next_due_date + (interval_count || ' days')::interval
+                              WHEN 'week'  THEN rec.next_due_date + (interval_count || ' weeks')::interval
+                              WHEN 'month' THEN rec.next_due_date + (interval_count || ' months')::interval
+                              WHEN 'year'  THEN rec.next_due_date + (interval_count || ' years')::interval
+                              ELSE rec.next_due_date + interval '1 month'
+                          END,
+                          updated_at = now()
+                      WHERE id = rec.id;
+                  END LOOP;
+              END;
+              $$ LANGUAGE plpgsql;
+            splitStatements: false
+      rollback:
+        - sql:
+            sql: DROP FUNCTION IF EXISTS process_recurring_transactions();
