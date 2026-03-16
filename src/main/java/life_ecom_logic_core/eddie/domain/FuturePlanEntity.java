@@ -27,8 +27,8 @@ public class FuturePlanEntity {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "estimated_cost", precision = 12, scale = 2)
-    private BigDecimal estimatedCost;
+    @Column(name = "target_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal targetAmount;
 
     @Column(name = "target_date")
     private LocalDate targetDate;
@@ -36,11 +36,8 @@ public class FuturePlanEntity {
     @Column(name = "priority")
     private String priority; // HIGH, MEDIUM, LOW
 
-    @Column(name = "status")
-    private String status; // PLANNING, SAVING, COMPLETED, CANCELLED
-
-    @Column(name = "done")
-    private Boolean done;
+    @Column(name = "status", nullable = false)
+    private String status; // ACTIVE, COMPLETED, PAUSED
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt; // TIMESTAMPTZ

@@ -39,3 +39,5 @@ databaseChangeLog:
       file: db/changelog/17-refactor-recurring-transaction-relation.yaml
   - include:
       file: db/changelog/18-drop-parent-transaction-id.yaml
+  - include:
+      file: db/changelog/19-update-plans-schema.yaml

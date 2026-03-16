@@ -1,0 +1,176 @@
+databaseChangeLog:
+
+  # ── future_plans: eliminar columnas obsoletas ─────────────────────────────
+  - changeSet:
+      id: v19-drop-estimated-cost-done
+      author: ediel96
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE future_plans DROP COLUMN IF EXISTS estimated_cost;
+              ALTER TABLE future_plans DROP COLUMN IF EXISTS done;
+            splitStatements: false
+      rollback:
+        - addColumn:
+            tableName: future_plans
+            columns:
+              - column: { name: estimated_cost, type: "NUMERIC(12,2)" }
+              - column: { name: done, type: BOOLEAN, defaultValueBoolean: false }
+
+  # ── future_plans: agregar target_amount ──────────────────────────────────
+  - changeSet:
+      id: v19-add-target-amount
+      author: ediel96
+      changes:
+        - addColumn:
+            tableName: future_plans
+            columns:
+              - column:
+                  name: target_amount
+                  type: NUMERIC(12,2)
+                  defaultValueNumeric: 0
+        - sql:
+            sql: UPDATE future_plans SET target_amount = 0 WHERE target_amount IS NULL;
+        - sql:
+            sql: ALTER TABLE future_plans ALTER COLUMN target_amount SET NOT NULL;
+      rollback:
+        - dropColumn:
+            tableName: future_plans
+            columnName: target_amount
+
+  # ── future_plans: status NOT NULL con default ACTIVE ─────────────────────
+  - changeSet:
+      id: v19-fix-status-column
+      author: ediel96
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              UPDATE future_plans SET status = 'ACTIVE' WHERE status IS NULL;
+              ALTER TABLE future_plans ALTER COLUMN status SET DEFAULT 'ACTIVE';
+              ALTER TABLE future_plans ALTER COLUMN status SET NOT NULL;
+            splitStatements: false
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE future_plans ALTER COLUMN status DROP NOT NULL;
+              ALTER TABLE future_plans ALTER COLUMN status DROP DEFAULT;
+
+  # ── future_plans: FK user_id (si no existe aun) ──────────────────────────
+  - changeSet:
+      id: v19-add-fk-future-plans-user
+      author: ediel96
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - foreignKeyConstraintExists:
+                foreignKeyTableName: future_plans
+                foreignKeyName: fk_future_plans_user
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: future_plans
+            baseColumnNames: user_id
+            constraintName: fk_future_plans_user
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: future_plans
+            constraintName: fk_future_plans_user
+
+  # ── plan_movements: reemplazar type BOOLEAN con movement_type VARCHAR ─────
+  - changeSet:
+      id: v19-refactor-plan-movements-type
+      author: ediel96
+      changes:
+        - sql:
+            dbms: postgresql
+            sql: |
+              ALTER TABLE plan_movements DROP COLUMN IF EXISTS type;
+              ALTER TABLE plan_movements ADD COLUMN IF NOT EXISTS movement_type VARCHAR(20) NOT NULL DEFAULT 'DEPOSIT';
+              ALTER TABLE plan_movements ALTER COLUMN date SET DEFAULT CURRENT_DATE;
+            splitStatements: false
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE plan_movements DROP COLUMN IF EXISTS movement_type;
+              ALTER TABLE plan_movements ADD COLUMN type BOOLEAN;
+
+  # ── plan_movements: FK plan_id (si no existe aun) ────────────────────────
+  - changeSet:
+      id: v19-add-fk-plan-movements-plan
+      author: ediel96
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - foreignKeyConstraintExists:
+                foreignKeyTableName: plan_movements
+                foreignKeyName: fk_plan_movements_plan
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: plan_movements
+            baseColumnNames: plan_id
+            constraintName: fk_plan_movements_plan
+            referencedTableName: future_plans
+            referencedColumnNames: id
+            onDelete: CASCADE
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: plan_movements
+            constraintName: fk_plan_movements_plan
+
+  # ── plan_tasks: nueva tabla ───────────────────────────────────────────────
+  - changeSet:
+      id: v19-create-table-plan-tasks
+      author: ediel96
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - tableExists:
+                tableName: plan_tasks
+      changes:
+        - createTable:
+            tableName: plan_tasks
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_plan_tasks
+              - column:
+                  name: plan_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_plan_tasks_plan
+                    references: future_plans(id)
+                    deleteCascade: true
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_completed
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_plan_tasks_plan_id
+            tableName: plan_tasks
+            columns:
+              - column: { name: plan_id }
+      rollback:
+        - dropTable:
+            tableName: plan_tasks

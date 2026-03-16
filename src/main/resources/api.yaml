@@ -23,6 +23,8 @@ tags:
     description: User financial goals and plans.
   - name: Plan Movements
     description: Money movements recorded for a plan.
+  - name: Plan Tasks
+    description: Checklist tasks associated with a future plan.
   - name: Recurring Transactions
     description: Automatic recurring payments and income linked to a base transaction.
   - name: Notifications
@@ -567,6 +569,85 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
 
   # -----------------------------------------------------------------------
+  # Plan Tasks
+  # -----------------------------------------------------------------------
+
+  /plan-tasks:
+    get:
+      tags: [Plan Tasks]
+      summary: List plan tasks
+      description: Retrieve tasks, optionally filtered by `plan_id`.
+      parameters:
+        - in: query
+          name: plan_id
+          schema: { type: integer }
+          description: Filter by plan id.
+      responses:
+        '200':
+          description: List of plan tasks.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PlanTask' }
+    post:
+      tags: [Plan Tasks]
+      summary: Create plan task
+      description: Add a task (checklist item) to a plan.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanTaskCreate' }
+      responses:
+        '201':
+          description: Task created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanTask' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /plan-tasks/{id}:
+    get:
+      tags: [Plan Tasks]
+      summary: Get plan task
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '200':
+          description: Task found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanTask' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Plan Tasks]
+      summary: Update plan task
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanTaskUpdate' }
+      responses:
+        '200':
+          description: Updated task.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanTask' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Plan Tasks]
+      summary: Delete plan task
+      parameters:
+        - $ref: '#/components/parameters/intId'
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # -----------------------------------------------------------------------
   # Recurring Transactions
   # -----------------------------------------------------------------------
 
@@ -919,7 +1000,7 @@ components:
 
     FuturePlanStatus:
       type: string
-      enum: [ PLANNING, SAVING, COMPLETED, CANCELLED ]
+      enum: [ ACTIVE, COMPLETED, PAUSED ]
 
     User:
       type: object
@@ -1069,13 +1150,12 @@ components:
         user_id: { type: string, format: uuid }
         title: { type: string }
         description: { type: string }
-        estimated_cost: { type: number, format: double }
+        target_amount: { type: number, format: double, default: 0 }
         target_date: { type: string, format: date }
         priority:
           $ref: '#/components/schemas/Priority'
         status:
           $ref: '#/components/schemas/FuturePlanStatus'
-        done: { type: boolean, default: false }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 
@@ -1086,11 +1166,10 @@ components:
         user_id: { type: string, format: uuid }
         title: { type: string }
         description: { type: string }
-        estimated_cost: { type: number, format: double }
+        target_amount: { type: number, format: double }
         target_date: { type: string, format: date }
         priority: { type: string }
         status: { type: string }
-        done: { type: boolean }
     FuturePlanUpdate:
       allOf:
         - $ref: '#/components/schemas/FuturePlanCreate'
@@ -1101,7 +1180,7 @@ components:
 
     PlanMovementType:
       type: string
-      enum: [ DEPOSIT, WITHDRAWAL, TRANSFER ]
+      enum: [ DEPOSIT, WITHDRAWAL ]
 
     PlanMovement:
       type: object
@@ -1111,21 +1190,44 @@ components:
         amount: { type: number, format: double }
         date: { type: string, format: date }
         note: { type: string }
-        type:
+        movement_type:
           $ref: '#/components/schemas/PlanMovementType'
 
     PlanMovementCreate:
       type: object
-      required: [plan_id, amount, date, type]
+      required: [plan_id, amount, date, movement_type]
       properties:
         plan_id: { type: integer }
         amount: { type: number, format: double }
         date: { type: string, format: date }
         note: { type: string }
-        type: { $ref: '#/components/schemas/PlanMovementType' }
+        movement_type: { $ref: '#/components/schemas/PlanMovementType' }
     PlanMovementUpdate:
       allOf:
         - $ref: '#/components/schemas/PlanMovementCreate'
+
+    PlanTask:
+      type: object
+      properties:
+        id: { type: integer }
+        plan_id: { type: integer }
+        title: { type: string }
+        is_completed: { type: boolean, default: false }
+        created_at: { type: string, format: date-time }
+
+    PlanTaskCreate:
+      type: object
+      required: [plan_id, title]
+      properties:
+        plan_id: { type: integer }
+        title: { type: string }
+        is_completed: { type: boolean, default: false }
+
+    PlanTaskUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        is_completed: { type: boolean }
 
     NotificationType:
       type: string

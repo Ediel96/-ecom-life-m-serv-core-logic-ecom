@@ -27,7 +27,12 @@ public class PlanMovementMapper {
 
         entity.setDate(src.getDate());
         entity.setNote(src.getNote());
-        entity.setType(toBoolean(src.getType()));
+
+        if (src.getMovementType() != null) {
+            entity.setMovementType(src.getMovementType().name());
+        } else {
+            entity.setMovementType("DEPOSIT");
+        }
 
         return entity;
     }
@@ -47,8 +52,12 @@ public class PlanMovementMapper {
         dto.setDate(entity.getDate());
         dto.setNote(entity.getNote());
 
-        if (entity.getType() != null) {
-            dto.setType(Boolean.TRUE.equals(entity.getType()) ? PlanMovementType.DEPOSIT : PlanMovementType.WITHDRAWAL);
+        if (entity.getMovementType() != null) {
+            try {
+                dto.setMovementType(PlanMovementType.valueOf(entity.getMovementType().toUpperCase()));
+            } catch (IllegalArgumentException ignored) {
+                dto.setMovementType(null);
+            }
         }
 
         return dto;
@@ -77,16 +86,10 @@ public class PlanMovementMapper {
             entity.setNote(update.getNote());
         }
 
-        if (update.getType() != null) {
-            entity.setType(toBoolean(update.getType()));
+        if (update.getMovementType() != null) {
+            entity.setMovementType(update.getMovementType().name());
         }
 
         return entity;
-    }
-
-    /** PlanMovementType enum → Boolean stored in DB (DEPOSIT=true, WITHDRAWAL=false). */
-    private Boolean toBoolean(PlanMovementType type) {
-        if (type == null) return null;
-        return type == PlanMovementType.DEPOSIT;
     }
 }

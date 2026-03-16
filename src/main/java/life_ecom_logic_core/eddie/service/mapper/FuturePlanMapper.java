@@ -9,6 +9,7 @@ import life_ecom_logic_core.eddie.domain.FuturePlanEntity;
 import life_ecom_logic_core.eddie.domain.UserEntity;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Component
@@ -27,14 +28,13 @@ public class FuturePlanMapper {
         entity.setTitle(src.getTitle());
         entity.setDescription(src.getDescription());
 
-        if (src.getEstimatedCost() != null) {
-            entity.setEstimatedCost(java.math.BigDecimal.valueOf(src.getEstimatedCost()));
-        }
+        entity.setTargetAmount(src.getTargetAmount() != null
+                ? BigDecimal.valueOf(src.getTargetAmount())
+                : BigDecimal.ZERO);
 
         entity.setTargetDate(src.getTargetDate());
         entity.setPriority(src.getPriority());
-        entity.setStatus(src.getStatus());
-        entity.setDone(Boolean.TRUE.equals(src.getDone()));
+        entity.setStatus(src.getStatus() != null ? src.getStatus() : "ACTIVE");
 
         entity.setCreatedAt(OffsetDateTime.now());
         entity.setUpdatedAt(OffsetDateTime.now());
@@ -53,8 +53,8 @@ public class FuturePlanMapper {
         dto.setTitle(entity.getTitle());
         dto.setDescription(entity.getDescription());
 
-        if (entity.getEstimatedCost() != null) {
-            dto.setEstimatedCost(entity.getEstimatedCost().doubleValue());
+        if (entity.getTargetAmount() != null) {
+            dto.setTargetAmount(entity.getTargetAmount().doubleValue());
         }
 
         dto.setTargetDate(entity.getTargetDate());
@@ -75,7 +75,6 @@ public class FuturePlanMapper {
             }
         }
 
-        dto.setDone(Boolean.TRUE.equals(entity.getDone()));
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
@@ -101,8 +100,8 @@ public class FuturePlanMapper {
             entity.setDescription(update.getDescription());
         }
 
-        if (update.getEstimatedCost() != null) {
-            entity.setEstimatedCost(java.math.BigDecimal.valueOf(update.getEstimatedCost()));
+        if (update.getTargetAmount() != null) {
+            entity.setTargetAmount(BigDecimal.valueOf(update.getTargetAmount()));
         }
 
         if (update.getTargetDate() != null) {
@@ -115,10 +114,6 @@ public class FuturePlanMapper {
 
         if (update.getStatus() != null) {
             entity.setStatus(update.getStatus());
-        }
-
-        if (update.getDone() != null) {
-            entity.setDone(update.getDone());
         }
 
         entity.setUpdatedAt(OffsetDateTime.now());

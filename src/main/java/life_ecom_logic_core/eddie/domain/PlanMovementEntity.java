@@ -28,6 +28,6 @@ public class PlanMovementEntity {
     @Column(name = "note")
     private String note;
 
-    @Column(name = "type")
-    private Boolean type; // true: deposit, false: withdrawal
+    @Column(name = "movement_type", nullable = false, length = 20)
+    private String movementType; // DEPOSIT, WITHDRAWAL
 }
