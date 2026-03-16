@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -31,11 +32,16 @@ public class RecurringTransactionsController implements RecurringTransactionsApi
             UUID userId,
             Boolean isActive,
             Boolean isLifestyle,
-            FrequencyType frequency) {
+            FrequencyType frequency,
+            Integer accountId,
+            TransactionType transactionType,
+            OffsetDateTime dateFrom,
+            OffsetDateTime dateTo) {
 
-        log.debug("Listing recurring transactions - userId: {}, isActive: {}", userId, isActive);
-        PageRecurringTransaction result =
-                recurringService.list(page, size, sort, userId, isActive, isLifestyle, frequency);
+        log.debug("Listing recurring transactions - userId: {}, isActive: {}, accountId: {}", userId, isActive, accountId);
+        PageRecurringTransaction result = recurringService.list(
+                page, size, sort, userId, isActive, isLifestyle,
+                frequency, accountId, transactionType, dateFrom, dateTo);
         return ResponseEntity.ok(result);
     }
 

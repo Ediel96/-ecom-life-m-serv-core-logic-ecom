@@ -2,13 +2,16 @@ package life_ecom_logic_core.eddie.service;
 
 import com.backend.organize_life.model.*;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public interface RecurringTransactionService {
 
     PageRecurringTransaction list(Integer page, Integer size, String sort,
                                   UUID userId, Boolean isActive, Boolean isLifestyle,
-                                  FrequencyType frequency);
+                                  FrequencyType frequency, Integer accountId,
+                                  TransactionType transactionType,
+                                  OffsetDateTime dateFrom, OffsetDateTime dateTo);
 
     RecurringTransaction get(Long id);
 

@@ -679,6 +679,22 @@ paths:
           name: frequency
           schema: { $ref: '#/components/schemas/FrequencyType' }
           description: Filter by recurrence frequency.
+        - in: query
+          name: accountId
+          schema: { type: integer }
+          description: Filter by account id.
+        - in: query
+          name: transactionType
+          schema: { $ref: '#/components/schemas/TransactionType' }
+          description: Filter by transaction type (income / expense).
+        - in: query
+          name: dateFrom
+          schema: { type: string, format: date-time }
+          description: Filter rules whose next_due_date is on or after this date.
+        - in: query
+          name: dateTo
+          schema: { type: string, format: date-time }
+          description: Filter rules whose next_due_date is on or before this date.
       responses:
         '200':
           description: Paginated list of recurring rules.

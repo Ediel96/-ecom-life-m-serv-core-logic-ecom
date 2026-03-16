@@ -1,7 +1,6 @@
 package life_ecom_logic_core.eddie.service.Impl;
 
 import com.backend.organize_life.model.*;
-import life_ecom_logic_core.eddie.domain.FrequencyType;
 import life_ecom_logic_core.eddie.domain.RecurringTransactionEntity;
 import life_ecom_logic_core.eddie.repository.RecurringTransactionRepository;
 import life_ecom_logic_core.eddie.service.RecurringTransactionService;
@@ -15,6 +14,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -33,19 +34,24 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Override
     public PageRecurringTransaction list(Integer page, Integer size, String sort,
                                          UUID userId, Boolean isActive, Boolean isLifestyle,
-                                         com.backend.organize_life.model.FrequencyType frequency) {
-        log.debug("Listing recurring transactions - userId: {}, isActive: {}", userId, isActive);
+                                         FrequencyType frequency, Integer accountId,
+                                         TransactionType transactionType,
+                                         OffsetDateTime dateFrom, OffsetDateTime dateTo) {
+        log.debug("Listing recurring transactions - userId: {}, isActive: {}, accountId: {}", userId, isActive, accountId);
 
         int pageNum  = normalize(page, DEFAULT_PAGE);
         int pageSize = normalize(size, DEFAULT_PAGE_SIZE);
-        Pageable pageable = PageRequest.of(pageNum, pageSize, buildSort(sort));
+        // Native query uses fixed ORDER BY; ignore dynamic sort to avoid SQL injection
+        Pageable pageable = PageRequest.of(pageNum, pageSize);
 
-        FrequencyType domainFreq = frequency != null
-                ? FrequencyType.valueOf(frequency.name().toLowerCase(java.util.Locale.ROOT))
-                : null;
+        String userIdStr  = userId != null ? userId.toString() : null;
+        String freqStr    = frequency != null ? frequency.name().toLowerCase(java.util.Locale.ROOT) : null;
+        String transStr   = transactionType != null ? transactionType.name().toLowerCase(java.util.Locale.ROOT) : null;
+        LocalDate from    = dateFrom != null ? dateFrom.toLocalDate() : null;
+        LocalDate to      = dateTo   != null ? dateTo.toLocalDate()   : null;
 
-        Page<RecurringTransactionEntity> result =
-                recurringRepository.search(userId, isActive, isLifestyle, domainFreq, pageable);
+        Page<RecurringTransactionEntity> result = recurringRepository.search(
+                userIdStr, accountId, isActive, isLifestyle, transStr, freqStr, from, to, pageable);
 
         return buildPage(result, pageNum, pageSize);
     }
