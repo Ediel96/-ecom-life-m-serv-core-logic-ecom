@@ -3,7 +3,9 @@ package life_ecom_logic_core.eddie.controller;
 import com.backend.organize_life.api.FuturePlansApiDelegate;
 import com.backend.organize_life.model.FuturePlan;
 import com.backend.organize_life.model.FuturePlanCreate;
+import com.backend.organize_life.model.FuturePlanStatus;
 import com.backend.organize_life.model.FuturePlanUpdate;
+import com.backend.organize_life.model.PlanProgress;
 import life_ecom_logic_core.eddie.service.FuturePlanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+
 
 @Slf4j
 @Service
@@ -64,5 +67,11 @@ public class FuturePlansController implements FuturePlansApiDelegate {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @Override
+    public ResponseEntity<List<PlanProgress>> futurePlansProgressGet(UUID userId, FuturePlanStatus status) {
+        log.debug("Fetching plan progress - userId: {}, status: {}", userId, status);
+        return ResponseEntity.ok(futurePlanService.progress(userId, status));
     }
 }

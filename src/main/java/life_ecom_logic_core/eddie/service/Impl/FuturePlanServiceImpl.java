@@ -2,8 +2,11 @@ package life_ecom_logic_core.eddie.service.Impl;
 
 import com.backend.organize_life.model.FuturePlan;
 import com.backend.organize_life.model.FuturePlanCreate;
+import com.backend.organize_life.model.FuturePlanStatus;
 import com.backend.organize_life.model.FuturePlanUpdate;
+import com.backend.organize_life.model.PlanProgress;
 import life_ecom_logic_core.eddie.repository.FuturePlanRepository;
+import life_ecom_logic_core.eddie.repository.projection.PlanProgressRow;
 import life_ecom_logic_core.eddie.service.FuturePlanService;
 import life_ecom_logic_core.eddie.service.mapper.FuturePlanMapper;
 import lombok.RequiredArgsConstructor;
@@ -63,5 +66,38 @@ public class FuturePlanServiceImpl implements FuturePlanService {
         }
         futurePlanRepository.deleteById(id);
         return true;
+    }
+
+    @Override
+    public List<PlanProgress> progress(UUID userId, FuturePlanStatus status) {
+        log.debug("Fetching plan progress - userId: {}, status: {}", userId, status);
+        String userIdStr = userId != null ? userId.toString() : null;
+        String statusStr = status != null ? status.getValue() : null;
+        return futurePlanRepository.findProgress(userIdStr, statusStr)
+                .stream()
+                .map(this::toProgressDto)
+                .collect(Collectors.toList());
+    }
+
+    private PlanProgress toProgressDto(PlanProgressRow row) {
+        PlanProgress dto = new PlanProgress();
+        dto.setId(row.getId());
+        dto.setUserId(row.getUserId());
+        dto.setTitle(row.getTitle());
+        dto.setIcon(row.getIcon());
+        dto.setTargetAmount(row.getTargetAmount() != null ? row.getTargetAmount().doubleValue() : 0.0);
+        dto.setTargetDate(row.getTargetDate());
+        dto.setReminderType(row.getReminderType());
+        dto.setReminderDay(row.getReminderDay());
+        dto.setSaved(row.getSaved() != null ? row.getSaved().doubleValue() : 0.0);
+        dto.setProgressPct(row.getProgressPct() != null ? row.getProgressPct().doubleValue() : 0.0);
+        dto.setAvgMonthlySavings(row.getAvgMonthlySavings() != null ? row.getAvgMonthlySavings().doubleValue() : 0.0);
+        dto.setEstimatedCompletionDate(row.getEstimatedCompletionDate());
+        if (row.getStatus() != null) {
+            try {
+                dto.setStatus(FuturePlanStatus.valueOf(row.getStatus().toUpperCase()));
+            } catch (IllegalArgumentException ignored) {}
+        }
+        return dto;
     }
 }

@@ -15,7 +15,7 @@ public class FuturePlanEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id; // SERIAL
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, columnDefinition = "uuid")
@@ -39,11 +39,20 @@ public class FuturePlanEntity {
     @Column(name = "status", nullable = false)
     private String status; // ACTIVE, COMPLETED, PAUSED
 
+    @Column(name = "icon", length = 50)
+    private String icon; // e.g. MOTORCYCLE, HOUSE, CAR, TRAVEL
+
+    @Column(name = "reminder_type", length = 20)
+    private String reminderType; // e.g. MONTHLY, WEEKLY
+
+    @Column(name = "reminder_day")
+    private Integer reminderDay; // e.g. 1 = 1st of month
+
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt; // TIMESTAMPTZ
+    private OffsetDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt; // TIMESTAMPTZ
+    private OffsetDateTime updatedAt;
 
     @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY)
     private List<PlanMovementEntity> movements;

@@ -1,8 +1,8 @@
-# yaml
 databaseChangeLog:
+
   - changeSet:
-      id: load-categories-01
-      author: dev
+      id: seed-categories
+      author: ediel96
       changes:
         - sqlFile:
             path: db/seeds/01-categories.sql
@@ -10,8 +10,8 @@ databaseChangeLog:
             relativeToChangelogFile: false
 
   - changeSet:
-      id: load-users-02
-      author: dev
+      id: seed-users
+      author: ediel96
       changes:
         - sqlFile:
             path: db/seeds/02-users.sql
@@ -21,8 +21,8 @@ databaseChangeLog:
             endDelimiter: ;
 
   - changeSet:
-      id: load-accounts-03
-      author: dev
+      id: seed-accounts
+      author: ediel96
       changes:
         - sqlFile:
             path: db/seeds/03-accounts.sql

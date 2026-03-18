@@ -1,43 +1,7 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/01-create-enums.yaml
+      file: db/changelog/01-schema.yaml
   - include:
-      file: db/changelog/02-create-table-categories.yaml
+      file: db/changelog/02-seeds.yaml
   - include:
-      file: db/changelog/02-create-table-users.yaml
-  - include:
-      file: db/changelog/03-create-table-accounts.yaml
-  - include:
-      file: db/changelog/03-add-type-column-to-categories.yaml
-  - include:
-      file: db/changelog/04-create-table-transactions.yaml
-  - include:
-      file: db/changelog/05-create-table-future-plans.yaml
-  - include:
-      file: db/changelog/06-create-table-plan-movements.yaml
-  - include:
-      file: db/changelog/07-add-foreign-keys.yaml
-  - include:
-      file: db/changelog/08-add-indexes.yaml
-  - include:
-      file: db/changelog/09-add-comments.yaml
-  - include:
-      file: db/changelog/10-load-seeds.yaml
-  - include:
-      file: db/changelog/11-add-column-transactions.yaml
-  - include:
-      file: db/changelog/12-add-notification-type-enum.yaml
-  - include:
-      file: db/changelog/13-add-columns-transactions.yaml
-  - include:
-      file: db/changelog/14-create-table-recurring-transactions.yaml
-  - include:
-      file: db/changelog/15-create-table-notifications.yaml
-  - include:
-      file: db/changelog/16-create-views-functions.yaml
-  - include:
-      file: db/changelog/17-refactor-recurring-transaction-relation.yaml
-  - include:
-      file: db/changelog/18-drop-parent-transaction-id.yaml
-  - include:
-      file: db/changelog/19-update-plans-schema.yaml
+      file: db/changelog/03-views-functions.yaml

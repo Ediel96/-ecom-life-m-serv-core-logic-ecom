@@ -2,6 +2,8 @@ package life_ecom_logic_core.eddie.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,7 +15,7 @@ public class PlanMovementEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id; // SERIAL
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "plan_id", nullable = false)
@@ -28,6 +30,8 @@ public class PlanMovementEntity {
     @Column(name = "note")
     private String note;
 
-    @Column(name = "movement_type", nullable = false, length = 20)
-    private String movementType; // DEPOSIT, WITHDRAWAL
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "movement_type", columnDefinition = "plan_movement_type", nullable = false)
+    private PlanMovementTypeEnum movementType;
 }

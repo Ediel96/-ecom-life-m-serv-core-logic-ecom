@@ -27,14 +27,15 @@ public class FuturePlanMapper {
 
         entity.setTitle(src.getTitle());
         entity.setDescription(src.getDescription());
-
         entity.setTargetAmount(src.getTargetAmount() != null
                 ? BigDecimal.valueOf(src.getTargetAmount())
                 : BigDecimal.ZERO);
-
         entity.setTargetDate(src.getTargetDate());
         entity.setPriority(src.getPriority());
         entity.setStatus(src.getStatus() != null ? src.getStatus() : "ACTIVE");
+        entity.setIcon(src.getIcon());
+        entity.setReminderType(src.getReminderType());
+        entity.setReminderDay(src.getReminderDay());
 
         entity.setCreatedAt(OffsetDateTime.now());
         entity.setUpdatedAt(OffsetDateTime.now());
@@ -62,19 +63,18 @@ public class FuturePlanMapper {
         if (entity.getPriority() != null) {
             try {
                 dto.setPriority(Priority.valueOf(entity.getPriority().toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-                dto.setPriority(null);
-            }
+            } catch (IllegalArgumentException ignored) {}
         }
 
         if (entity.getStatus() != null) {
             try {
                 dto.setStatus(FuturePlanStatus.valueOf(entity.getStatus().toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-                dto.setStatus(null);
-            }
+            } catch (IllegalArgumentException ignored) {}
         }
 
+        dto.setIcon(entity.getIcon());
+        dto.setReminderType(entity.getReminderType());
+        dto.setReminderDay(entity.getReminderDay());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
 
@@ -82,39 +82,22 @@ public class FuturePlanMapper {
     }
 
     public FuturePlanEntity updateEntity(FuturePlanUpdate update, FuturePlanEntity entity) {
-        if (update == null || entity == null) {
-            return entity;
-        }
+        if (update == null || entity == null) return entity;
 
         if (update.getUserId() != null) {
             UserEntity user = entity.getUser() != null ? entity.getUser() : new UserEntity();
             user.setId(update.getUserId());
             entity.setUser(user);
         }
-
-        if (update.getTitle() != null) {
-            entity.setTitle(update.getTitle());
-        }
-
-        if (update.getDescription() != null) {
-            entity.setDescription(update.getDescription());
-        }
-
-        if (update.getTargetAmount() != null) {
-            entity.setTargetAmount(BigDecimal.valueOf(update.getTargetAmount()));
-        }
-
-        if (update.getTargetDate() != null) {
-            entity.setTargetDate(update.getTargetDate());
-        }
-
-        if (update.getPriority() != null) {
-            entity.setPriority(update.getPriority());
-        }
-
-        if (update.getStatus() != null) {
-            entity.setStatus(update.getStatus());
-        }
+        if (update.getTitle() != null)        entity.setTitle(update.getTitle());
+        if (update.getDescription() != null)  entity.setDescription(update.getDescription());
+        if (update.getTargetAmount() != null) entity.setTargetAmount(BigDecimal.valueOf(update.getTargetAmount()));
+        if (update.getTargetDate() != null)   entity.setTargetDate(update.getTargetDate());
+        if (update.getPriority() != null)     entity.setPriority(update.getPriority());
+        if (update.getStatus() != null)       entity.setStatus(update.getStatus());
+        if (update.getIcon() != null)         entity.setIcon(update.getIcon());
+        if (update.getReminderType() != null) entity.setReminderType(update.getReminderType());
+        if (update.getReminderDay() != null)  entity.setReminderDay(update.getReminderDay());
 
         entity.setUpdatedAt(OffsetDateTime.now());
         return entity;

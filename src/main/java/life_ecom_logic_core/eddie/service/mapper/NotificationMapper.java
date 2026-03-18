@@ -34,6 +34,11 @@ public class NotificationMapper {
         dto.setSentAt(entity.getSentAt() != null
                 ? JsonNullable.of(entity.getSentAt())
                 : JsonNullable.undefined());
+
+        dto.setPlanId(entity.getPlan() != null && entity.getPlan().getId() != null
+                ? JsonNullable.of(entity.getPlan().getId())
+                : JsonNullable.undefined());
+
         dto.setIsRead(entity.isRead());
         dto.setCreatedAt(entity.getCreatedAt());
         return dto;

@@ -3,6 +3,7 @@ package life_ecom_logic_core.eddie.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -20,6 +21,9 @@ public class PlanTaskEntity {
 
     @Column(name = "title", nullable = false)
     private String title;
+
+    @Column(name = "value", nullable = false, precision = 12, scale = 2)
+    private BigDecimal value;
 
     @Column(name = "is_completed", nullable = false)
     private boolean isCompleted;

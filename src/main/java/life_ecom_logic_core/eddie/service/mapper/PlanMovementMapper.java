@@ -6,6 +6,7 @@ import com.backend.organize_life.model.PlanMovementType;
 import com.backend.organize_life.model.PlanMovementUpdate;
 import life_ecom_logic_core.eddie.domain.FuturePlanEntity;
 import life_ecom_logic_core.eddie.domain.PlanMovementEntity;
+import life_ecom_logic_core.eddie.domain.PlanMovementTypeEnum;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,12 +28,7 @@ public class PlanMovementMapper {
 
         entity.setDate(src.getDate());
         entity.setNote(src.getNote());
-
-        if (src.getMovementType() != null) {
-            entity.setMovementType(src.getMovementType().name());
-        } else {
-            entity.setMovementType("DEPOSIT");
-        }
+        entity.setMovementType(toDomainEnum(src.getMovementType()));
 
         return entity;
     }
@@ -51,45 +47,48 @@ public class PlanMovementMapper {
 
         dto.setDate(entity.getDate());
         dto.setNote(entity.getNote());
-
-        if (entity.getMovementType() != null) {
-            try {
-                dto.setMovementType(PlanMovementType.valueOf(entity.getMovementType().toUpperCase()));
-            } catch (IllegalArgumentException ignored) {
-                dto.setMovementType(null);
-            }
-        }
+        dto.setMovementType(toApiEnum(entity.getMovementType()));
 
         return dto;
     }
 
     public PlanMovementEntity updateEntity(PlanMovementUpdate update, PlanMovementEntity entity) {
-        if (update == null || entity == null) {
-            return entity;
-        }
+        if (update == null || entity == null) return entity;
 
         if (update.getPlanId() != null) {
             FuturePlanEntity plan = entity.getPlan() != null ? entity.getPlan() : new FuturePlanEntity();
             plan.setId(update.getPlanId());
             entity.setPlan(plan);
         }
-
         if (update.getAmount() != null) {
             entity.setAmount(java.math.BigDecimal.valueOf(update.getAmount()));
         }
-
         if (update.getDate() != null) {
             entity.setDate(update.getDate());
         }
-
         if (update.getNote() != null) {
             entity.setNote(update.getNote());
         }
-
         if (update.getMovementType() != null) {
-            entity.setMovementType(update.getMovementType().name());
+            entity.setMovementType(toDomainEnum(update.getMovementType()));
         }
 
         return entity;
+    }
+
+    private PlanMovementTypeEnum toDomainEnum(PlanMovementType api) {
+        if (api == null) return PlanMovementTypeEnum.DEPOSIT;
+        return switch (api) {
+            case DEPOSIT  -> PlanMovementTypeEnum.DEPOSIT;
+            case WITHDRAW -> PlanMovementTypeEnum.WITHDRAW;
+        };
+    }
+
+    private PlanMovementType toApiEnum(PlanMovementTypeEnum domain) {
+        if (domain == null) return null;
+        return switch (domain) {
+            case DEPOSIT  -> PlanMovementType.DEPOSIT;
+            case WITHDRAW -> PlanMovementType.WITHDRAW;
+        };
     }
 }

@@ -7,6 +7,7 @@ import life_ecom_logic_core.eddie.domain.FuturePlanEntity;
 import life_ecom_logic_core.eddie.domain.PlanTaskEntity;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Component
@@ -23,6 +24,7 @@ public class PlanTaskMapper {
         }
 
         entity.setTitle(src.getTitle());
+        entity.setValue(src.getValue() != null ? BigDecimal.valueOf(src.getValue()) : BigDecimal.ZERO);
         entity.setCompleted(Boolean.TRUE.equals(src.getIsCompleted()));
         entity.setCreatedAt(OffsetDateTime.now());
 
@@ -38,6 +40,7 @@ public class PlanTaskMapper {
         }
 
         dto.setTitle(entity.getTitle());
+        dto.setValue(entity.getValue() != null ? entity.getValue().doubleValue() : 0.0);
         dto.setIsCompleted(entity.isCompleted());
         dto.setCreatedAt(entity.getCreatedAt());
 
@@ -45,14 +48,14 @@ public class PlanTaskMapper {
     }
 
     public PlanTaskEntity updateEntity(PlanTaskUpdate update, PlanTaskEntity entity) {
-        if (update == null || entity == null) {
-            return entity;
-        }
+        if (update == null || entity == null) return entity;
 
         if (update.getTitle() != null) {
             entity.setTitle(update.getTitle());
         }
-
+        if (update.getValue() != null) {
+            entity.setValue(BigDecimal.valueOf(update.getValue()));
+        }
         if (update.getIsCompleted() != null) {
             entity.setCompleted(update.getIsCompleted());
         }

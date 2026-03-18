@@ -35,6 +35,11 @@ public class NotificationEntity {
     @JoinColumn(name = "transaction_id")
     private TransactionEntity transaction;
 
+    /** Related goal — set for goal reminder notifications. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "plan_id")
+    private FuturePlanEntity plan;
+
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "type", columnDefinition = "notification_type", nullable = false)
