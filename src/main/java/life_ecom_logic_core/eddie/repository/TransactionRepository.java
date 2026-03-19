@@ -24,8 +24,8 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
           AND (:accountId IS NULL OR t.account_id = :accountId)
           AND (:categoryId IS NULL OR t.category_id = :categoryId)
           AND (CAST(:transactionType AS text) IS NULL OR t.transaction_type = CAST(:transactionType AS transaction_type))
-          AND (CAST(:dateFrom AS text) IS NULL OR t.date >= :dateFrom::timestamptz)
-          AND (CAST(:dateTo AS text) IS NULL OR t.date <= :dateTo::timestamptz)
+          AND (CAST(:dateFrom AS text) IS NULL OR t.date >= CAST(:dateFrom AS timestamptz))
+          AND (CAST(:dateTo AS text) IS NULL OR t.date <= CAST(:dateTo AS timestamptz))
         """,
         countQuery = """
         SELECT COUNT(*) FROM transactions t
@@ -35,8 +35,8 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
           AND (:accountId IS NULL OR t.account_id = :accountId)
           AND (:categoryId IS NULL OR t.category_id = :categoryId)
           AND (CAST(:transactionType AS text) IS NULL OR t.transaction_type = CAST(:transactionType AS transaction_type))
-          AND (CAST(:dateFrom AS text) IS NULL OR t.date >= :dateFrom::timestamptz)
-          AND (CAST(:dateTo AS text) IS NULL OR t.date <= :dateTo::timestamptz)
+          AND (CAST(:dateFrom AS text) IS NULL OR t.date >= CAST(:dateFrom AS timestamptz))
+          AND (CAST(:dateTo AS text) IS NULL OR t.date <= CAST(:dateTo AS timestamptz))
         """,
         nativeQuery = true)
     Page<TransactionEntity> search(
