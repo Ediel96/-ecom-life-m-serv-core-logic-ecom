@@ -5,7 +5,6 @@ import life_ecom_logic_core.eddie.config.JwtUtil;
 import life_ecom_logic_core.eddie.domain.TransactionEntity;
 import life_ecom_logic_core.eddie.repository.TransactionRepository;
 import life_ecom_logic_core.eddie.service.TransactionsService;
-import life_ecom_logic_core.eddie.service.mapper.TransactionEnumMapper;
 import life_ecom_logic_core.eddie.service.mapper.TransactionsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,23 +36,20 @@ public class TransactionsServiceImpl implements TransactionsService {
 
     /** Fields blocked from sorting */
     private static final Set<String> BLOCKED_SORT_FIELDS = Set.of(
-            "updated_at", "date", "updatedAt"
+            "updated_at", "date"
     );
 
-    /** Mapping from API field names (snake_case) to entity property names (camelCase) */
+    /** Mapping from API field names to SQL column names (native query) */
     private static final Map<String, String> SORT_FIELD_ALIASES = Map.ofEntries(
-            Map.entry("created_at", "createdAt"),
-            Map.entry("updated_at", "updatedAt"),
-            Map.entry("transaction_type", "transactionType"),
+            Map.entry("created_at", "created_at"),
+            Map.entry("transaction_type", "transaction_type"),
             Map.entry("amount", "amount"),
-            Map.entry("description", "description"),
-            Map.entry("date", "date")
+            Map.entry("description", "description")
     );
 
     private final JwtUtil jwtUtil;
     private final TransactionRepository transactionRepository;
     private final TransactionsMapper transactionsMapper;
-    private final TransactionEnumMapper transactionEnumMapper = new TransactionEnumMapper();
 
     /**
      * Lists transactions with pagination and optional filters.
@@ -81,12 +77,12 @@ public class TransactionsServiceImpl implements TransactionsService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, buildSort(sort));
 
         Page<TransactionEntity> pageEntities = transactionRepository.search(
-                userId,
+                userId != null ? userId.toString() : null,
                 accountId,
                 categoryId,
                 transactionType != null ? transactionType.name().toLowerCase(java.util.Locale.ROOT) : null,
-                dateFrom,
-                dateTo,
+                dateFrom != null ? dateFrom.toString() : null,
+                dateTo != null ? dateTo.toString() : null,
                 pageable
         );
 

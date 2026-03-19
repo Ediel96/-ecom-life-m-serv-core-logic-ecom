@@ -13,26 +13,39 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Long>, JpaSpecificationExecutor<TransactionEntity> {
 
-    @Query("""
-        select t from TransactionEntity t
-        left join t.account a
-        left join t.category c
-        where (:userId IS NULL OR t.user.id = :userId)
-          and (:accountId IS NULL OR a.id = :accountId)
-          and (:categoryId IS NULL OR c.id = :categoryId)
-          and (:transactionType IS NULL OR cast(t.transactionType as string) = :transactionType)
-          and (:dateFrom IS NULL OR t.date >= :dateFrom)
-          and (:dateTo IS NULL OR t.date <= :dateTo)
-        """)
+    @Query(value = """
+        SELECT t.* FROM transactions t
+        LEFT JOIN accounts a ON a.id = t.account_id
+        LEFT JOIN categories c ON c.id = t.category_id
+        WHERE (CAST(:userId AS text) IS NULL OR t.user_id = CAST(:userId AS uuid))
+          AND (:accountId IS NULL OR t.account_id = :accountId)
+          AND (:categoryId IS NULL OR t.category_id = :categoryId)
+          AND (CAST(:transactionType AS text) IS NULL OR t.transaction_type = CAST(:transactionType AS transaction_type))
+          AND (CAST(:dateFrom AS text) IS NULL OR t.date >= :dateFrom::timestamptz)
+          AND (CAST(:dateTo AS text) IS NULL OR t.date <= :dateTo::timestamptz)
+        """,
+        countQuery = """
+        SELECT COUNT(*) FROM transactions t
+        LEFT JOIN accounts a ON a.id = t.account_id
+        LEFT JOIN categories c ON c.id = t.category_id
+        WHERE (CAST(:userId AS text) IS NULL OR t.user_id = CAST(:userId AS uuid))
+          AND (:accountId IS NULL OR t.account_id = :accountId)
+          AND (:categoryId IS NULL OR t.category_id = :categoryId)
+          AND (CAST(:transactionType AS text) IS NULL OR t.transaction_type = CAST(:transactionType AS transaction_type))
+          AND (CAST(:dateFrom AS text) IS NULL OR t.date >= :dateFrom::timestamptz)
+          AND (CAST(:dateTo AS text) IS NULL OR t.date <= :dateTo::timestamptz)
+        """,
+        nativeQuery = true)
     Page<TransactionEntity> search(
-            @Param("userId") UUID userId,
+            @Param("userId") String userId,
             @Param("accountId") Integer accountId,
             @Param("categoryId") Integer categoryId,
             @Param("transactionType") String transactionType,
-            @Param("dateFrom") OffsetDateTime dateFrom,
-            @Param("dateTo") OffsetDateTime dateTo,
+            @Param("dateFrom") String dateFrom,
+            @Param("dateTo") String dateTo,
             Pageable pageable
     );
 
