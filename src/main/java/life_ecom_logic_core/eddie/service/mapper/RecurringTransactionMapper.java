@@ -68,7 +68,7 @@ public class RecurringTransactionMapper {
         }
 
         // Template data
-        if (src.getAccountId() != null && src.getAccountId().isPresent()) {
+        if (src.getAccountId() != null && src.getAccountId().isPresent() && src.getAccountId().get() != null) {
             AccountEntity account = new AccountEntity();
             account.setId(src.getAccountId().get());
             entity.setAccount(account);
@@ -110,7 +110,7 @@ public class RecurringTransactionMapper {
         if (update == null || entity == null) return entity;
 
         // Template data
-        if (update.getAccountId() != null && update.getAccountId().isPresent()) {
+        if (update.getAccountId() != null && update.getAccountId().isPresent() && update.getAccountId().get() != null) {
             AccountEntity account = entity.getAccount() != null ? entity.getAccount() : new AccountEntity();
             account.setId(update.getAccountId().get());
             entity.setAccount(account);

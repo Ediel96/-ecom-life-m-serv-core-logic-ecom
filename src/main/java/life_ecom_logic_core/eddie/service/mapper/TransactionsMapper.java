@@ -17,7 +17,7 @@ public class TransactionsMapper {
         dto.setId(null);
 
         // Account
-        if (src.getAccountId() != null && src.getAccountId().isPresent()) {
+        if (src.getAccountId() != null && src.getAccountId().isPresent() && src.getAccountId().get() != null) {
             AccountEntity account = new AccountEntity();
             account.setId(src.getAccountId().get().longValue());
             dto.setAccount(account);
@@ -180,7 +180,7 @@ public class TransactionsMapper {
         if (update == null || entity == null) {
             return entity;
         }
-        if (update.getAccountId() != null && update.getAccountId().isPresent()) {
+        if (update.getAccountId() != null && update.getAccountId().isPresent() && update.getAccountId().get() != null) {
             AccountEntity account = entity.getAccount() != null ? entity.getAccount() : new AccountEntity();
             account.setId(update.getAccountId().get().longValue());
             entity.setAccount(account);
