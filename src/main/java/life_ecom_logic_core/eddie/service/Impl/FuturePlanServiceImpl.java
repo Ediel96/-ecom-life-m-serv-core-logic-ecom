@@ -37,34 +37,46 @@ public class FuturePlanServiceImpl implements FuturePlanService {
     @Override
     public FuturePlan get(Integer id) {
         log.debug("Fetching future plan with id: {}", id);
-        return futurePlanRepository.findById(id)
+        FuturePlan result = futurePlanRepository.findById(id)
                 .map(futurePlanMapper::toDto)
                 .orElse(null);
+        if (result == null) log.warn("Future plan not found with id: {}", id);
+        return result;
     }
 
     @Override
     public FuturePlan create(FuturePlanCreate create) {
-        log.info("Creating new future plan");
-        return futurePlanMapper.toDto(
+        log.info("Creating new future plan for userId: {}", create.getUserId());
+        FuturePlan saved = futurePlanMapper.toDto(
                 futurePlanRepository.save(futurePlanMapper.toEntity(create)));
+        log.info("Future plan created with id: {}", saved.getId());
+        return saved;
     }
 
     @Override
     public FuturePlan update(Integer id, FuturePlanUpdate update) {
         log.info("Updating future plan with id: {}", id);
-        return futurePlanRepository.findById(id)
-                .map(entity -> futurePlanMapper.toDto(
-                        futurePlanRepository.save(futurePlanMapper.updateEntity(update, entity))))
+        FuturePlan result = futurePlanRepository.findById(id)
+                .map(entity -> {
+                    FuturePlan saved = futurePlanMapper.toDto(
+                            futurePlanRepository.save(futurePlanMapper.updateEntity(update, entity)));
+                    log.info("Future plan updated id: {}", id);
+                    return saved;
+                })
                 .orElse(null);
+        if (result == null) log.warn("Future plan not found for update, id: {}", id);
+        return result;
     }
 
     @Override
     public boolean delete(Integer id) {
         log.info("Deleting future plan with id: {}", id);
         if (!futurePlanRepository.existsById(id)) {
+            log.warn("Future plan not found for delete, id: {}", id);
             return false;
         }
         futurePlanRepository.deleteById(id);
+        log.info("Future plan deleted id: {}", id);
         return true;
     }
 

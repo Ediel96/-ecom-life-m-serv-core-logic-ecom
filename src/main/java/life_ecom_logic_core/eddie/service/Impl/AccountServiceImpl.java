@@ -62,6 +62,7 @@ public class AccountServiceImpl implements AccountService {
             entities = accountRepository.findByUserId(tokenUserId, DEFAULT_ACCOUNT_TYPE);
         }
 
+        log.debug("Found {} accounts for userId: {}", entities.size(), tokenUserId);
         return mapEntitiesToDto(entities);
     }
 
@@ -86,16 +87,15 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     public Account create(AccountCreate accountCreate) {
-        log.info("Creating account with name: {} for userId: {}",
-                accountCreate.getName(), accountCreate.getUserId());
-
         String token = jwtUtil.extractTokenFromRequest();
         UUID userId = jwtUtil.extractUserId(token);
+        log.info("Creating account with name: '{}' for userId: {}", accountCreate.getName(), userId);
+
         UserEntity user = userRepository.findById(userId);
 
         AccountEntity entity = AccountMapper.toEntity(accountCreate, user);
         AccountEntity savedEntity = accountRepository.save(entity);
-
+        log.info("Account created with id: {} for userId: {}", savedEntity.getId(), userId);
         return AccountMapper.toDto(savedEntity);
     }
 
@@ -127,9 +127,11 @@ public class AccountServiceImpl implements AccountService {
     public boolean delete(Integer id) {
         log.info("Deleting account with id: {}", id);
         if (!accountRepository.existsById(id.longValue())) {
+            log.warn("Account not found for delete, id: {}", id);
             return false;
         }
         accountRepository.deleteById(id.longValue());
+        log.info("Account deleted id: {}", id);
         return true;
     }
 

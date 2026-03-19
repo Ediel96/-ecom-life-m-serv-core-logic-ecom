@@ -33,34 +33,46 @@ public class PlanMovementServiceImpl implements PlanMovementService {
     @Override
     public PlanMovement get(Integer id) {
         log.debug("Fetching plan movement with id: {}", id);
-        return planMovementRepository.findById(id)
+        PlanMovement result = planMovementRepository.findById(id)
                 .map(planMovementMapper::toDto)
                 .orElse(null);
+        if (result == null) log.warn("Plan movement not found with id: {}", id);
+        return result;
     }
 
     @Override
     public PlanMovement create(PlanMovementCreate create) {
-        log.info("Creating new plan movement");
-        return planMovementMapper.toDto(
+        log.info("Creating plan movement for planId: {}", create.getPlanId());
+        PlanMovement saved = planMovementMapper.toDto(
                 planMovementRepository.save(planMovementMapper.toEntity(create)));
+        log.info("Plan movement created with id: {}", saved.getId());
+        return saved;
     }
 
     @Override
     public PlanMovement update(Integer id, PlanMovementUpdate update) {
         log.info("Updating plan movement with id: {}", id);
-        return planMovementRepository.findById(id)
-                .map(entity -> planMovementMapper.toDto(
-                        planMovementRepository.save(planMovementMapper.updateEntity(update, entity))))
+        PlanMovement result = planMovementRepository.findById(id)
+                .map(entity -> {
+                    PlanMovement saved = planMovementMapper.toDto(
+                            planMovementRepository.save(planMovementMapper.updateEntity(update, entity)));
+                    log.info("Plan movement updated id: {}", id);
+                    return saved;
+                })
                 .orElse(null);
+        if (result == null) log.warn("Plan movement not found for update, id: {}", id);
+        return result;
     }
 
     @Override
     public boolean delete(Integer id) {
         log.info("Deleting plan movement with id: {}", id);
         if (!planMovementRepository.existsById(id)) {
+            log.warn("Plan movement not found for delete, id: {}", id);
             return false;
         }
         planMovementRepository.deleteById(id);
+        log.info("Plan movement deleted id: {}", id);
         return true;
     }
 }

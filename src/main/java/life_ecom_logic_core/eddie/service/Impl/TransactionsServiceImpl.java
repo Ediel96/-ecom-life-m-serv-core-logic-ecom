@@ -74,7 +74,7 @@ public class TransactionsServiceImpl implements TransactionsService {
                                  Integer accountId, Integer categoryId,
                                  TransactionType transactionType, OffsetDateTime dateFrom,
                                  OffsetDateTime dateTo) {
-        log.debug("Listing transactions - page: {}, size: {}, userId: {}", page, size, userId);
+        log.debug("Listing transactions - page: {}, size: {}, userId: {}, accountId: {}, categoryId: {}, type: {}", page, size, userId, accountId, categoryId, transactionType);
 
         int pageNumber = normalizePageNumber(page);
         int pageSize = normalizePageSize(size);
@@ -90,6 +90,7 @@ public class TransactionsServiceImpl implements TransactionsService {
                 pageable
         );
 
+        log.debug("Transactions query returned {} of {} total records", pageEntities.getNumberOfElements(), pageEntities.getTotalElements());
         return buildPageResponse(pageEntities, pageNumber, pageSize);
     }
 
@@ -102,9 +103,11 @@ public class TransactionsServiceImpl implements TransactionsService {
     @Override
     public Transaction get(Long id) {
         log.debug("Fetching transaction with id: {}", id);
-        return transactionRepository.findById(id)
+        Transaction result = transactionRepository.findById(id)
                 .map(transactionsMapper::toDto)
                 .orElse(null);
+        if (result == null) log.warn("Transaction not found with id: {}", id);
+        return result;
     }
 
     /**
@@ -117,9 +120,11 @@ public class TransactionsServiceImpl implements TransactionsService {
     public boolean delete(Long id) {
         log.info("Deleting transaction with id: {}", id);
         if (!transactionRepository.existsById(id)) {
+            log.warn("Transaction not found for delete, id: {}", id);
             return false;
         }
         transactionRepository.deleteById(id);
+        log.info("Transaction deleted id: {}", id);
         return true;
     }
 
@@ -133,12 +138,16 @@ public class TransactionsServiceImpl implements TransactionsService {
     @Override
     public Transaction update(Long id, TransactionUpdate update) {
         log.info("Updating transaction with id: {}", id);
-        return transactionRepository.findById(id)
+        Transaction result = transactionRepository.findById(id)
                 .map(entity -> {
                     TransactionEntity updatedEntity = transactionsMapper.updateEntity(update, entity);
-                    return transactionsMapper.toDto(transactionRepository.save(updatedEntity));
+                    Transaction saved = transactionsMapper.toDto(transactionRepository.save(updatedEntity));
+                    log.info("Transaction updated id: {}", id);
+                    return saved;
                 })
                 .orElse(null);
+        if (result == null) log.warn("Transaction not found for update, id: {}", id);
+        return result;
     }
 
     /**
@@ -150,8 +159,6 @@ public class TransactionsServiceImpl implements TransactionsService {
      */
     @Override
     public Transaction create(TransactionCreate create) {
-        log.info("Creating new transaction");
-
         String token = jwtUtil.extractTokenFromRequest();
         UUID tokenUserId = jwtUtil.extractUserId(token);
         String role = jwtUtil.extractRole(token);
@@ -163,9 +170,12 @@ public class TransactionsServiceImpl implements TransactionsService {
             }
         }
 
+        log.info("Creating transaction for userId: {}, type: {}, amount: {}", tokenUserId, create != null ? create.getTransactionType() : null, create != null ? create.getAmount() : null);
         TransactionEntity savedEntity = transactionRepository.save(
                 transactionsMapper.toEntity(create));
-        return transactionsMapper.toDto(savedEntity);
+        Transaction result = transactionsMapper.toDto(savedEntity);
+        log.info("Transaction created with id: {}", result.getId());
+        return result;
     }
 
     // ================== Helper Methods ==================

@@ -59,14 +59,17 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Override
     public RecurringTransaction get(Long id) {
         log.debug("Fetching recurring transaction id: {}", id);
-        return recurringRepository.findById(id).map(mapper::toDto).orElse(null);
+        RecurringTransaction result = recurringRepository.findById(id).map(mapper::toDto).orElse(null);
+        if (result == null) log.warn("Recurring transaction not found with id: {}", id);
+        return result;
     }
 
     @Override
     @Transactional
     public RecurringTransaction create(RecurringTransactionCreate create) {
-        log.info("Creating recurring transaction for userId: {}", create.getUserId());
+        log.info("Creating recurring transaction for userId: {}, type: {}, frequency: {}", create.getUserId(), create.getTransactionType(), create.getFrequency());
         RecurringTransactionEntity saved = recurringRepository.save(mapper.toEntity(create));
+        log.info("Recurring transaction created with id: {}", saved.getId());
         return mapper.toDto(saved);
     }
 
@@ -74,17 +77,27 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Transactional
     public RecurringTransaction update(Long id, RecurringTransactionUpdate update) {
         log.info("Updating recurring transaction id: {}", id);
-        return recurringRepository.findById(id)
-                .map(entity -> mapper.toDto(recurringRepository.save(mapper.updateEntity(update, entity))))
+        RecurringTransaction result = recurringRepository.findById(id)
+                .map(entity -> {
+                    RecurringTransaction saved = mapper.toDto(recurringRepository.save(mapper.updateEntity(update, entity)));
+                    log.info("Recurring transaction updated id: {}", id);
+                    return saved;
+                })
                 .orElse(null);
+        if (result == null) log.warn("Recurring transaction not found for update, id: {}", id);
+        return result;
     }
 
     @Override
     @Transactional
     public boolean delete(Long id) {
         log.info("Deleting recurring transaction id: {}", id);
-        if (!recurringRepository.existsById(id)) return false;
+        if (!recurringRepository.existsById(id)) {
+            log.warn("Recurring transaction not found for delete, id: {}", id);
+            return false;
+        }
         recurringRepository.deleteById(id);
+        log.info("Recurring transaction deleted id: {}", id);
         return true;
     }
 
@@ -92,13 +105,17 @@ public class RecurringTransactionServiceImpl implements RecurringTransactionServ
     @Transactional
     public RecurringTransaction toggle(Long id) {
         log.info("Toggling is_active for recurring transaction id: {}", id);
-        return recurringRepository.findById(id)
+        RecurringTransaction result = recurringRepository.findById(id)
                 .map(entity -> {
-                    entity.setActive(!entity.isActive());
+                    boolean newState = !entity.isActive();
+                    entity.setActive(newState);
                     entity.setUpdatedAt(java.time.OffsetDateTime.now());
+                    log.info("Recurring transaction id: {} is_active set to: {}", id, newState);
                     return mapper.toDto(recurringRepository.save(entity));
                 })
                 .orElse(null);
+        if (result == null) log.warn("Recurring transaction not found for toggle, id: {}", id);
+        return result;
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
