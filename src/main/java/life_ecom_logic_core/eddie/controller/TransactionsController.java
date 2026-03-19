@@ -2,6 +2,7 @@ package life_ecom_logic_core.eddie.controller;
 
 import com.backend.organize_life.api.TransactionsApiDelegate;
 import com.backend.organize_life.model.*;
+import life_ecom_logic_core.eddie.config.JwtUtil;
 import life_ecom_logic_core.eddie.service.TransactionsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class TransactionsController implements TransactionsApiDelegate {
 
     private final TransactionsService transactionsService;
+    private final JwtUtil jwtUtil;
 
     /**
      * Retrieves a paginated list of transactions with optional filters.
@@ -66,6 +68,12 @@ public class TransactionsController implements TransactionsApiDelegate {
 
         // Coalesce: prefer camelCase params and fall back to snake_case variants
         UUID finalUserId = coalesce(userId, userId2);
+        if (finalUserId == null) {
+            String token = jwtUtil.extractTokenFromRequest();
+            if (token != null) {
+                finalUserId = jwtUtil.extractUserId(token);
+            }
+        }
         Integer finalAccountId = coalesce(accountId, accountId2);
         Integer finalCategoryId = coalesce(categoryId, categoryId2);
         TransactionType finalTransactionType = coalesce(transactionType, transactionType2);
