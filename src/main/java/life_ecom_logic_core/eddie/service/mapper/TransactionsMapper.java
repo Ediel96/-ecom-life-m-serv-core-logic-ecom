@@ -17,11 +17,13 @@ public class TransactionsMapper {
         dto.setId(null);
 
         // Account
-        AccountEntity account = new AccountEntity();
         if (src.getAccountId() != null && src.getAccountId().isPresent()) {
+            AccountEntity account = new AccountEntity();
             account.setId(src.getAccountId().get().longValue());
+            dto.setAccount(account);
+        } else {
+            dto.setAccount(null);
         }
-        dto.setAccount(account);
 
         // User
         if (src.getUserId() != null && src.getUserId().isPresent()) {

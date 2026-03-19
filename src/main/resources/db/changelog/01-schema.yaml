@@ -580,6 +580,25 @@ databaseChangeLog:
       rollback:
         - dropTable: { tableName: notifications }
 
+  # ── make account_id nullable in transactions & recurring_transactions ───────
+  - changeSet:
+      id: v1-make-account-id-nullable
+      author: ediel96
+      changes:
+        - sql:
+            dbms: postgresql
+            splitStatements: false
+            sql: |
+              ALTER TABLE transactions ALTER COLUMN account_id DROP NOT NULL;
+              ALTER TABLE recurring_transactions ALTER COLUMN account_id DROP NOT NULL;
+      rollback:
+        - sql:
+            dbms: postgresql
+            splitStatements: false
+            sql: |
+              ALTER TABLE transactions ALTER COLUMN account_id SET NOT NULL;
+              ALTER TABLE recurring_transactions ALTER COLUMN account_id SET NOT NULL;
+
   # ── indexes ────────────────────────────────────────────────────────────────
   - changeSet:
       id: v1-add-indexes
