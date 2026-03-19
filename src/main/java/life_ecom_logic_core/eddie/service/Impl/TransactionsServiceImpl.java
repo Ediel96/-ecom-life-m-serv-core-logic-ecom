@@ -84,7 +84,7 @@ public class TransactionsServiceImpl implements TransactionsService {
                 userId,
                 accountId,
                 categoryId,
-                transactionType != null ? transactionEnumMapper.mapToEntityEnum(transactionType) : null,
+                transactionType != null ? transactionType.name().toLowerCase(java.util.Locale.ROOT) : null,
                 dateFrom,
                 dateTo,
                 pageable

@@ -1,8 +1,6 @@
 package life_ecom_logic_core.eddie.repository;
 
-import com.backend.organize_life.model.TransactionType;
 import life_ecom_logic_core.eddie.domain.TransactionEntity;
-import life_ecom_logic_core.eddie.domain.TransactionTypeEnum;
 import life_ecom_logic_core.eddie.repository.projection.LifestyleSummaryRow;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +22,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
         where (:userId IS NULL OR t.user.id = :userId)
           and (:accountId IS NULL OR a.id = :accountId)
           and (:categoryId IS NULL OR c.id = :categoryId)
-          and (:transactionType IS NULL OR t.transactionType = :transactionType)
+          and (:transactionType IS NULL OR cast(t.transactionType as string) = :transactionType)
           and (:dateFrom IS NULL OR t.date >= :dateFrom)
           and (:dateTo IS NULL OR t.date <= :dateTo)
         """)
@@ -32,7 +30,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
             @Param("userId") UUID userId,
             @Param("accountId") Integer accountId,
             @Param("categoryId") Integer categoryId,
-            @Param("transactionType") TransactionTypeEnum transactionType,
+            @Param("transactionType") String transactionType,
             @Param("dateFrom") OffsetDateTime dateFrom,
             @Param("dateTo") OffsetDateTime dateTo,
             Pageable pageable
