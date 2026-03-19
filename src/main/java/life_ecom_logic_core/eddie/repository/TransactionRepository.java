@@ -19,12 +19,14 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
 
     @Query("""
         select t from TransactionEntity t
-        where t.user.id = coalesce(:userId, t.user.id)
-          and t.account.id = coalesce(:accountId, t.account.id)
-          and t.category.id = coalesce(:categoryId, t.category.id)
-          and t.transactionType = coalesce(:transactionType, t.transactionType)
-          and t.date >= coalesce(:dateFrom, t.date)
-          and t.date <= coalesce(:dateTo, t.date)
+        left join t.account a
+        left join t.category c
+        where (:userId IS NULL OR t.user.id = :userId)
+          and (:accountId IS NULL OR a.id = :accountId)
+          and (:categoryId IS NULL OR c.id = :categoryId)
+          and (:transactionType IS NULL OR t.transactionType = :transactionType)
+          and (:dateFrom IS NULL OR t.date >= :dateFrom)
+          and (:dateTo IS NULL OR t.date <= :dateTo)
         """)
     Page<TransactionEntity> search(
             @Param("userId") UUID userId,
