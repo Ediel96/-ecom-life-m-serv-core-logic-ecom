@@ -19,6 +19,6 @@ COPY --from=build /workspace/build/libs/*.jar app.jar
 EXPOSE 8083
 
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
-ENV SERVER_PORT=8082
+ENV SERVER_PORT=8083
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.address=0.0.0.0 -Dserver.port=${SERVER_PORT} -jar /app/app.jar"]
